@@ -37,7 +37,7 @@ function resize(file,max=1024){return new Promise((ok,no)=>{const im=new Image()
     c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
     URL.revokeObjectURL(u);ok(c.toDataURL("image/jpeg",.82))};
   im.onerror=()=>no(new Error("Foto tidak bisa dibuka"));im.src=u})}
-async function pick(i){const f=i.files[0];if(!f)return;pred="loading";perr="";render();
+async function pick(i){const f=i.files[0];i.value="";if(!f)return;pred="loading";perr="";render();
   try{photo=await resize(f);render();
     const r=await fetch("/api/diagnose",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({image:photo.split(",")[1],tanaman:fcrop,kandidat:D.filter(d=>fcrop==="tidak"||d.t===fcrop).map(d=>d.n)})});
@@ -63,8 +63,11 @@ function hasil(){
 }
 function foto(){return`<h2>Foto tanaman</h2><div class="card"><p>Pilih tanaman, lalu foto bagian yang sakit atau hama yang terlihat. Perlu internet.</p>
 ${chips(fcrop,[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"],["tidak","Tidak tahu"]],"setF")}
-<input type="file" accept="image/*" capture="environment" id="f" style="display:none" onchange="pick(this)">
-<button class="btn" onclick="$('#f').click()">Ambil atau pilih foto</button>
+<input type="file" accept="image/*" capture="environment" id="fcam" style="display:none" onchange="pick(this)">
+<input type="file" accept="image/*" id="fgal" style="display:none" onchange="pick(this)">
+<button class="btn" onclick="$('#fcam').click()">Ambil foto dengan kamera</button>
+<div style="height:10px"></div>
+<button class="btn sec" onclick="$('#fgal').click()">Unggah foto dari galeri</button>
 ${photo?`<img class="pv" src="${photo}" alt="Foto tanaman yang dipilih">`:""}</div>${hasil()}`}
 function tentang(){return`<h2>Tentang prototipe</h2><div class="card"><p>Data Sumba Timur berasal dari laporan dan penelitian tentang padi, jagung, dan belalang kembara. Data sayur masih umum karena belum ada data khusus Sumba Timur.</p>
 <ul><li>Kalender dan isi penanganan harus divalidasi ahli sebelum dipakai petani.</li><li>Tahap berikutnya: pengumpulan foto lapangan, model AI di HP, laporan temuan, dan peringatan dini.</li></ul></div>`}
