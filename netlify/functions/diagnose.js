@@ -50,7 +50,7 @@ Balas HANYA JSON, tanpa teks lain, dengan bentuk:
         headers: { "x-goog-api-key": env("GEMINI_API_KEY"), "content-type": "application/json" },
         body: JSON.stringify({
           contents: [{ parts: [{ inline_data: { mime_type: "image/jpeg", data: image } }, { text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json", maxOutputTokens: 800 }
+          generationConfig: { responseMimeType: "application/json", maxOutputTokens: 1200, ...(model.includes("2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}) }
         })
       });
       if (r.status === 429) return out(429, { error: "Batas pemakaian gratis tercapai. Coba lagi beberapa menit lagi." });
