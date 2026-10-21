@@ -1,0 +1,12 @@
+[build]
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+
+# Aplikasi memanggil /api/diagnose, diteruskan ke fungsi Netlify
+[[redirects]]
+  from = "/api/diagnose"
+  to = "/.netlify/functions/diagnose"
+  status = 200
+  force = true
