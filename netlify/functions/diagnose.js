@@ -44,17 +44,31 @@ Balas HANYA JSON, tanpa teks lain, dengan bentuk:
   try {
     let txt = "";
     if (provider === "gemini") {
-      const model = env("GEMINI_MODEL") || "gemini-flash-latest"; // cek nama model yang tersedia di AI Studio
-      const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
-        method: "POST", signal: AbortSignal.timeout(limit),
-        headers: { "x-goog-api-key": env("GEMINI_API_KEY"), "content-type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ inline_data: { mime_type: "image/jpeg", data: image } }, { text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json", maxOutputTokens: 1200, ...(model.includes("2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}) }
-        })
-      });
+      const primary = env("GEMINI_MODEL") || "gemini-flash-latest";
+      const fb = (env("GEMINI_FALLBACK_MODELS") || "gemini-flash-latest,gemini-3.1-flash-lite").split(",").map(x => x.trim()).filter(Boolean);
+      // Urutan percobaan: model utama, cadangan, lalu model utama sekali lagi
+      const attempts = [primary, ...fb.filter(m => m !== primary), primary];
+      const deadline = Date.now() + limit;
+      let r = null;
+      for (const model of attempts) {
+        const left = deadline - Date.now();
+        if (left < 3000) break;
+        r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent", {
+          method: "POST", signal: AbortSignal.timeout(left),
+          headers: { "x-goog-api-key": env("GEMINI_API_KEY"), "content-type": "application/json" },
+          body: JSON.stringify({
+            contents: [{ parts: [{ inline_data: { mime_type: "image/jpeg", data: image } }, { text: prompt }] }],
+            generationConfig: { responseMimeType: "application/json", maxOutputTokens: 1200, ...(model.includes("2.5") ? { thinkingConfig: { thinkingBudget: 0 } } : {}) }
+          })
+        });
+        if (r.ok) break;
+        if (![404, 500, 503, 504].includes(r.status)) break; // 429, 400, 403 dst: tidak perlu dicoba model lain
+        console.log("Gemini " + r.status + " pada model " + model + ", mencoba berikutnya");
+        await new Promise(res => setTimeout(res, 700));
+      }
+      if (!r) return out(504, { error: "AI terlalu lama menjawab. Coba foto lagi." });
       if (r.status === 429) return out(429, { error: "Batas pemakaian gratis tercapai. Coba lagi beberapa menit lagi." });
-      if (!r.ok) return out(502, { error: "Layanan AI sedang bermasalah (kode " + r.status + ")" });
+      if (!r.ok) return out(502, { error: "Layanan AI sedang bermasalah (kode " + r.status + "). Coba lagi sebentar lagi." });
       const j = await r.json();
       txt = ((j.candidates || [])[0]?.content?.parts || []).map(p => p.text || "").join("");
     } else {
