@@ -31,11 +31,11 @@ let bal=null,balErr="";
 async function muatBalasan(){
  bal="loading";balErr="";render();
  try{const r=await fetch(SB.url+"/rest/v1/rpc/cek_balasan",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json"},body:JSON.stringify({k:kodeku()})});
-  if(!r.ok)throw 0;bal=await r.json();localStorage.balasan=JSON.stringify(bal)}
- catch(e){try{bal=JSON.parse(localStorage.balasan||"[]")}catch(x){bal=[]}balErr="Tidak ada internet. Menampilkan data terakhir."}
+  if(!r.ok){balErr="Gagal memuat balasan (kode "+r.status+"). Pastikan SQL tambahan sudah dijalankan di Supabase.";throw 0}bal=await r.json();localStorage.balasan=JSON.stringify(bal)}
+ catch(e){try{bal=JSON.parse(localStorage.balasan||"[]")}catch(x){bal=[]}if(!balErr)balErr="Tidak ada internet. Menampilkan data terakhir."}
  render()}
 function balasan(){
- let h=`<h2>Balasan pakar</h2>`;
+ let h=`<h2>Balasan pakar</h2><small>Kode HP: ${kodeku().slice(0,6)}</small>`;
  if(bal===null||bal==="loading")return h+`<div class="note">Memuat...</div>`;
  if(balErr)h+=`<div class="note">${esc(balErr)}</div>`;
  if(!bal.length)return h+`<div class="note">Belum ada hasil yang dikirim dari HP ini. Kirim lewat menu Cek gejala, tombol Kirim hasil ke pakar.</div>`;
