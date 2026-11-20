@@ -1,6 +1,6 @@
 // Data hama dan penyakit. Edit di sini untuk menambah entri.
 const MON=["Jan","Feb","Mar","Apr","Mei","Jun","Jul","Agu","Sep","Okt","Nov","Des"];
-const NOW=9; // Oktober
+const NOW=new Date().getMonth(); // bulan sekarang
 const TAN={padi:"Padi",jagung:"Jagung",sayur:"Sayur"};
 const D=[
 {t:"padi",n:"Wereng batang coklat",k:"Hama",s:1,w:[2,3,4],g:["Daun menguning dan mengering mulai dari pangkal, seperti terbakar","Serangga kecil coklat berkumpul di pangkal batang","Rumpun padi mengering melingkar (hopperburn)"],c:["Amati pangkal batang tiap minggu, jangan menunggu rumpun kering","Tanam serempak dan pilih varietas tahan wereng","Jaga musuh alami (laba-laba, kepik) dan hindari pupuk N berlebihan","Semprot insektisida hanya jika populasi sudah melewati ambang. Tanyakan jenis dan dosis ke POPT"]},

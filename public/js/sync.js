@@ -15,12 +15,12 @@ return`<h2>Cek gejala</h2>${chips(ccrop,CR,"setCC")}<div class="card">${S.map(x=
 <button class="btn sec" onclick="cc={};render()">Hapus pilihan</button><div style="height:14px"></div>${res}`}
 async function kirim(){
  const nama=prompt("Nama Anda (boleh dikosongkan):")||"Petani";
- try{const r=await fetch(SB.url+"/rest/v1/riwayat",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+SB.key,"Content-Type":"application/json"},body:JSON.stringify({nama,tanaman:ccrop,hasil:lastR})});
+ try{const r=await fetch(SB.url+"/rest/v1/riwayat",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json"},body:JSON.stringify({nama,tanaman:ccrop,hasil:lastR})});
   alert(r.ok?"Terkirim ke pakar. Terima kasih.":"Gagal mengirim.")}catch(e){alert("Tidak ada internet. Coba lagi nanti.")}}
 (async()=>{
  const apply=a=>{if(Array.isArray(a)&&a.length){D.length=0;D.push(...a);render()}};
  try{apply(JSON.parse(localStorage.kb))}catch(e){}
  if(SB.url.includes("XXXX"))return;
- try{const r=await fetch(SB.url+"/rest/v1/kb?id=eq.1&select=data",{headers:{apikey:SB.key,Authorization:"Bearer "+SB.key}});
+ try{const r=await fetch(SB.url+"/rest/v1/kb?id=eq.1&select=data",{headers:{apikey:SB.key}});
   const j=await r.json();if(j[0]){localStorage.kb=JSON.stringify(j[0].data);apply(j[0].data)}}catch(e){}
 })();

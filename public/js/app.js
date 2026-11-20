@@ -1,6 +1,6 @@
 let tab="pustaka",crop="semua",sel=null,mon=NOW,ccrop="padi",cc={},photo=null;
 const $=s=>document.querySelector(s);
-const esc=t=>String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function chips(cur,opts,fn){return`<div class="row">${opts.map(([v,l])=>`<button class="chip" aria-pressed="${cur===v}" onclick="${fn}('${v}')">${l}</button>`).join("")}</div>`}
 const CR=[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"]];
 const tag=d=>`<span class="tag">${d.k}</span><span class="tag ${d.s?"sb":""}">${d.s?"Tercatat di Sumba Timur":"Data umum"}</span>`;
