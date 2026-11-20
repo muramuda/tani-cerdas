@@ -1,0 +1,80 @@
+<!DOCTYPE html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Tani Cerdas Sumba Timur</title>
+<style>
+:root{--bg:#f4f6fa;--c:#fff;--t:#1b2433;--m:#667085;--p:#1f3a5f;--l:#dde3ec;--r:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#111722;--c:#1b2433;--t:#e8edf5;--m:#9aa6b8;--p:#5b8ccf;--l:#2c384a}}
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:var(--bg);color:var(--t)}
+header{background:var(--p);color:#fff;padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+header b{margin-right:auto}header button{background:#ffffff25;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+header button.on{background:#fff;color:var(--p)}
+main{max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--c);border:1px solid var(--l);border-radius:12px;padding:14px;margin-bottom:12px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.s{border-radius:10px;padding:12px;color:#fff;font-size:13px}.s b{display:block;font-size:26px}
+input,select,textarea{width:100%;padding:9px;border:1px solid var(--l);border-radius:8px;background:var(--bg);color:var(--t);font:inherit;margin:4px 0 10px}
+textarea{min-height:90px}label{font-size:13px;color:var(--m)}
+.btn{background:var(--p);color:#fff;border:0;padding:10px 16px;border-radius:8px;cursor:pointer;font:inherit}
+.btn.x{background:var(--r)}.btn.o{background:transparent;color:var(--p);border:1px solid var(--p)}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--l)}
+.bar{height:10px;background:var(--p);border-radius:5px}small{color:var(--m)}
+#msg{color:var(--r);min-height:20px}
+</style></head><body>
+<div id="app"></div>
+<script src="../js/data.js"></script>
+<script src="../js/config.js"></script>
+<script>
+const $=s=>document.querySelector(s),esc=t=>String(t??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let tok=sessionStorage.tok||"",items=[],hist=[],view="dash",ed=null,msg="";
+const H=a=>({apikey:SB.key,...(a?{Authorization:"Bearer "+a}:{}),"Content-Type":"application/json"});
+async function masuk(){
+ try{const r=await fetch(SB.url+"/auth/v1/token?grant_type=password",{method:"POST",headers:H(),body:JSON.stringify({email:$("#em").value,password:$("#pw").value})});
+  const j=await r.json();if(!r.ok)throw Error(j.error_description||j.msg||"Gagal masuk");
+  tok=sessionStorage.tok=j.access_token;await load();render()}catch(e){msg=e.message;render()}}
+function keluar(){tok="";sessionStorage.tok="";render()}
+async function load(){
+ const r=await fetch(SB.url+"/rest/v1/kb?id=eq.1&select=data",{headers:H(tok)});
+ if(r.status==401){keluar();return}
+ const j=await r.json();items=j[0]?j[0].data:JSON.parse(JSON.stringify(D));
+ const h=await fetch(SB.url+"/rest/v1/riwayat?select=*&order=created_at.desc&limit=200",{headers:H(tok)});hist=h.ok?await h.json():[]}
+async function simpan(){
+ const r=await fetch(SB.url+"/rest/v1/kb",{method:"POST",headers:{...H(tok),Prefer:"resolution=merge-duplicates"},body:JSON.stringify({id:1,data:items,updated_at:new Date().toISOString()})});
+ if(!r.ok)throw Error("Gagal menyimpan ("+r.status+")")}
+function edit(i){ed=i;view="form";msg="";render()}
+async function hapus(i){if(!confirm("Hapus "+items[i].n+"?"))return;const b=items.splice(i,1);try{await simpan()}catch(e){items.splice(i,0,...b);msg=e.message}render()}
+async function submitForm(){
+ const num=(v,d)=>{v=parseFloat(String(v).replace(",","."));return isNaN(v)?d:Math.min(1,Math.max(0,v))};
+ const rows=$("#fg").value.split("\n").map(x=>x.trim()).filter(Boolean).map(l=>{const p=l.split("|").map(s=>s.trim());return[p[0],num(p[1],.8),num(p[2],.1)]});
+ const d={t:$("#ft").value,n:$("#fn").value.trim(),k:$("#fk").value,s:$("#fs").checked?1:0,
+  w:$("#fw").value.split(",").map(x=>+x.trim()).filter(x=>x>=1&&x<=12),
+  g:rows.map(r=>r[0]),m:rows.map(r=>[r[1],r[2]]),c:$("#fc").value.split("\n").map(x=>x.trim()).filter(Boolean)};
+ if(!d.n||!d.g.length){msg="Nama dan minimal satu gejala wajib diisi.";render();return}
+ const old=items.slice();ed===-1?items.push(d):items[ed]=d;
+ try{await simpan();view="data";msg="Tersimpan. Aplikasi petani akan mengambil data baru saat online."}catch(e){items=old;msg=e.message}render()}
+function nav(v){view=v;ed=null;msg="";render()}
+const cols=["#17a2b8","#28a745","#f0ad4e","#dc3545"];
+function dash(){
+ const nG=items.reduce((a,d)=>a+d.g.length,0),mx=Math.max(...items.map(d=>d.g.length),1);
+ return`<div class="g">${[["Data Penyakit",items.length],["Data Gejala",nG],["Basis Pengetahuan",nG],["Total Diagnosa",hist.length]].map(([l,v],i)=>`<div class="s" style="background:${cols[i]}">${l}<b>${v}</b></div>`).join("")}</div>
+ <div class="card" style="margin-top:12px"><b>Jumlah gejala per penyakit</b>${items.map(d=>`<div style="margin:8px 0"><small>${esc(d.n)} (${d.g.length})</small><div class="bar" style="width:${d.g.length/mx*100}%"></div></div>`).join("")}</div>`}
+function data(){return`<button class="btn" onclick="edit(-1)">+ Tambah penyakit/hama</button><div class="card" style="margin-top:12px">${items.map((d,i)=>`<div class="row"><div><b>${esc(d.n)}</b><br><small>${esc(d.t)} · ${esc(d.k)} · ${d.g.length} gejala</small></div><div><button class="btn o" onclick="edit(${i})">Ubah</button> <button class="btn x" onclick="hapus(${i})">Hapus</button></div></div>`).join("")}</div>`}
+function form(){const d=ed===-1?{t:"padi",k:"Hama",s:0,w:[],g:[],m:[],c:[],n:""}:items[ed];
+ const opt=(a,v)=>a.map(x=>`<option ${x===v?"selected":""}>${x}</option>`).join("");
+ return`<div class="card"><b>${ed===-1?"Tambah":"Ubah"} data</b><br>
+ <label>Nama</label><input id="fn" value="${esc(d.n)}">
+ <label>Tanaman</label><select id="ft">${opt(["padi","jagung","sayur"],d.t)}</select>
+ <label>Jenis</label><select id="fk">${opt(["Hama","Penyakit"],d.k)}</select>
+ <label><input type="checkbox" id="fs" ${d.s?"checked":""} style="width:auto"> Tercatat di Sumba Timur</label><br><br>
+ <label>Bulan waspada (angka 1-12, pisahkan koma)</label><input id="fw" value="${d.w.join(", ")}">
+ <label>Gejala, satu per baris: teks | MB | MD (nilai 0-1, CF = MB − MD)</label>
+ <textarea id="fg">${esc(d.g.map((g,i)=>`${g} | ${(d.m&&d.m[i]||[.8,.1])[0]} | ${(d.m&&d.m[i]||[.8,.1])[1]}`).join("\n"))}</textarea>
+ <label>Saran penanganan, satu per baris</label><textarea id="fc">${esc(d.c.join("\n"))}</textarea>
+ <button class="btn" onclick="submitForm()">Simpan</button> <button class="btn o" onclick="nav('data')">Batal</button></div>`}
+function riwayat(){return`<div class="card">${hist.length?hist.map(h=>`<div class="row"><div><b>${esc(h.nama)}</b> · ${esc(h.tanaman)}<br><small>${(h.hasil||[]).map(x=>esc(x.nama)+" "+x.cf+"%").join(", ")}</small></div><small>${new Date(h.created_at).toLocaleString("id-ID")}</small></div>`).join(""):"<small>Belum ada diagnosa masuk.</small>"}</div>`}
+function render(){
+ if(SB.url.includes("XXXX")){$("#app").innerHTML=`<main><div class="card">Isi dulu <b>js/config.js</b> dengan URL dan anon key Supabase.</div></main>`;return}
+ if(!tok){$("#app").innerHTML=`<main style="max-width:360px"><div class="card"><h2>Login Pakar</h2><label>Email</label><input id="em" type="email"><label>Password</label><input id="pw" type="password" onkeydown="event.key=='Enter'&&masuk()"><button class="btn" onclick="masuk()">Masuk</button><p id="msg">${esc(msg)}</p></div></main>`;return}
+ const T=[["dash","Dashboard"],["data","Basis Pengetahuan"],["riwayat","Riwayat Diagnosa"]];
+ $("#app").innerHTML=`<header><b>Admin Tani Cerdas</b>${T.map(([k,l])=>`<button class="${view===k||(view==="form"&&k==="data")?"on":""}" onclick="nav('${k}')">${l}</button>`).join("")}<button onclick="keluar()">Keluar</button></header>
+ <main>${msg?`<div class="card" id="msg">${esc(msg)}</div>`:""}${({dash,data,form,riwayat})[view]()}</main>`}
+if(tok)load().then(render);else render();
+</script></body></html>
