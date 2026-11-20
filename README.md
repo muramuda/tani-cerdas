@@ -1,4 +1,4 @@
-# Tani Cerdas Sumba Timur (versi online, Netlify)
+# Tani Cerdas Sumba Timur
 
 Petani cukup membuka **satu link** di HP. Foto dikirim ke fungsi server kecil di Netlify, yang bertanya ke AI (Gemini gratis, atau Claude berbayar), lalu hasilnya ditampilkan. Pustaka, Cek gejala, dan Kalender tetap bisa dibuka tanpa internet setelah link dibuka sekali.
 
@@ -41,8 +41,24 @@ Fungsi Netlify bawaannya dibatasi sekitar 10 detik. Fungsi ini membatalkan pangg
 - Claude: berbayar per foto. Atur batas pengeluaran.
 - Pembatas 30 foto per IP per jam (sederhana). Tanpa internet, foto tidak bisa didiagnosa.
 
-## Soal akurasi (penting)
+## Catatan penggunaan
 
-- AI belum dilatih khusus dengan foto hama Sumba Timur. Hasil berupa perkiraan dan bisa salah. Aplikasi menampilkan persen keyakinan dan menyarankan bertanya ke POPT.
-- Uji dengan puluhan foto yang jawabannya sudah diketahui POPT sebelum dipakai luas.
-- Kalender waspada adalah hipotesis, dan isi penanganan adalah panduan umum tanpa dosis pestisida. Validasi ke POPT/BPTPH NTT.
+- Hasil Foto memakai AI dan berupa perkiraan. Aplikasi menampilkan persen keyakinan dan menyarankan bertanya ke POPT bila ragu.
+- Isi penanganan tidak mencantumkan dosis pestisida. Dosis ditanyakan ke POPT, penyuluh, atau BPTPH.
+- Data pengetahuan dikelola pakar lewat halaman admin (/admin/).
+
+## Halaman admin pakar (Supabase)
+
+```
+public/index.html        halaman PETANI
+public/admin/index.html  halaman ADMIN/PAKAR (alamat: /admin/)
+public/js/config.js      URL dan anon key Supabase (isi sendiri)
+public/js/sync.js        menarik data pakar + hitung Certainty Factor
+setup.sql                dijalankan sekali di Supabase > SQL Editor
+```
+
+1. Buat proyek di supabase.com, jalankan `setup.sql` di SQL Editor.
+2. Authentication > Users > Add user (akun pakar). Matikan pendaftaran baru di Providers > Email.
+3. Isi `public/js/config.js` dengan Project URL dan **anon public key** (jangan pakai `service_role`).
+4. Deploy lewat GitHub + Netlify seperti langkah di atas (bukan seret-lepas, karena fungsi foto butuh `netlify/functions`).
+5. Buka `/admin/`, login, buka Basis Pengetahuan, Ubah lalu Simpan sekali agar data awal tersalin ke database.
