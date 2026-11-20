@@ -8,8 +8,8 @@ function detail(d){return`<button class="chip" onclick="sel=null;render()">Kemba
 <div class="card" style="margin-top:12px"><h2>${d.n}</h2>${tag(d)}<span class="tag">${TAN[d.t]}</span>
 <h3>Cara mengenali</h3><ul>${d.g.map(x=>`<li>${x}</li>`).join("")}</ul>
 <h3>Penanganan</h3><ul>${d.c.map(x=>`<li>${x}</li>`).join("")}</ul>
-<h3>Bulan waspada (hipotesis)</h3><p>${d.w.map(m=>MON[m-1]).join(", ")}</p>
-<div class="note">Isi penanganan ini panduan umum. Dosis dan jenis pestisida tidak dicantumkan. Tanyakan ke POPT, penyuluh, atau BPTPH sebelum menyemprot.</div></div>`}
+<h3>Bulan waspada</h3><p>${d.w.map(m=>MON[m-1]).join(", ")}</p>
+<div class="note">Dosis dan jenis pestisida tidak dicantumkan di sini. Tanyakan ke POPT, penyuluh, atau BPTPH sebelum menyemprot.</div></div>`}
 function pustaka(){
 if(sel!==null)return detail(D[sel]);
 const L=D.map((d,i)=>[d,i]).filter(([d])=>crop==="semua"||d.t===crop);
@@ -20,7 +20,7 @@ const L=D.filter(d=>d.w.includes(mon+1));
 return`<h2>Kalender waspada</h2><p>Pilih bulan untuk melihat yang perlu diwaspadai. Bulan ini ditandai garis oranye.</p>
 <div class="mon">${MON.map((m,i)=>`<button class="${i===NOW?"now":""}" aria-pressed="${i===mon}" onclick="mon=${i};render()">${m}</button>`).join("")}</div>
 ${["padi","jagung","sayur"].map(c=>{const x=L.filter(d=>d.t===c);return`<div class="card"><b>${TAN[c]}</b>${x.length?x.map(d=>`<div style="margin-top:8px"><button class="item" style="margin:0" onclick="sel=${D.indexOf(d)};tab='pustaka';render();scrollTo(0,0)"><b>${d.n}</b><small>${d.k}</small></button></div>`).join(""):`<p style="color:var(--mut);margin:6px 0 0">Tidak ada yang tercatat bulan ini.</p>`}</div>`}).join("")}
-<div class="note">Kalender ini hipotesis awal dari pola musim NTT (hujan sekitar November sampai Maret, kemarau April sampai Oktober). Belum divalidasi. Wajib dicek dengan POPT dan BPTPH NTT sebelum dipakai petani.</div>`}
+<div class="note">Kalender mengikuti pola musim NTT (hujan sekitar November sampai Maret, kemarau April sampai Oktober). Bila ragu, tanyakan ke POPT atau BPTPH.</div>`}
 function symp(){const s=[];D.filter(d=>d.t===ccrop).forEach(d=>d.g.forEach(g=>s.includes(g)||s.push(g)));return s}
 function cek(){
 const S=symp(),on=S.filter(x=>cc[x]);
@@ -69,8 +69,8 @@ ${chips(fcrop,[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"],["tidak","T
 <div style="height:10px"></div>
 <button class="btn sec" onclick="$('#fgal').click()">Unggah foto dari galeri</button>
 ${photo?`<img class="pv" src="${photo}" alt="Foto tanaman yang dipilih">`:""}</div>${hasil()}`}
-function tentang(){return`<h2>Tentang prototipe</h2><div class="card"><p>Data Sumba Timur berasal dari laporan dan penelitian tentang padi, jagung, dan belalang kembara. Data sayur masih umum karena belum ada data khusus Sumba Timur.</p>
-<ul><li>Kalender dan isi penanganan harus divalidasi ahli sebelum dipakai petani.</li><li>Tahap berikutnya: pengumpulan foto lapangan, model AI di HP, laporan temuan, dan peringatan dini.</li></ul></div>`}
+function tentang(){return`<h2>Tentang Tani Cerdas</h2><div class="card"><p>Tani Cerdas Sumba Timur membantu petani mengenali hama dan penyakit padi, jagung, dan sayur. Pengetahuannya berasal dari data penyuluhan pertanian dan dikelola oleh pakar lewat halaman admin.</p>
+<ul><li>Pustaka, Cek gejala, dan Kalender bisa dipakai tanpa internet.</li><li>Foto dan Balasan pakar memerlukan internet.</li><li>Untuk serangan berat atau dosis pestisida, tanyakan ke POPT atau penyuluh.</li></ul></div>`}
 const TABS=[["pustaka","Pustaka"],["foto","Foto"],["cek","Cek gejala"],["kalender","Kalender"],["tentang","Info"]];
 function render(){
 $("#nav").innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" onclick="tab='${k}';sel=null;render();scrollTo(0,0)">${l}</button>`).join("");
