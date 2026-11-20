@@ -69,7 +69,15 @@ function form(){const d=ed===-1?{t:"padi",k:"Hama",s:0,w:[],g:[],m:[],c:[],n:""}
  <textarea id="fg">${esc(d.g.map((g,i)=>`${g} | ${(d.m&&d.m[i]||[.8,.1])[0]} | ${(d.m&&d.m[i]||[.8,.1])[1]}`).join("\n"))}</textarea>
  <label>Saran penanganan, satu per baris</label><textarea id="fc">${esc(d.c.join("\n"))}</textarea>
  <button class="btn" onclick="submitForm()">Simpan</button> <button class="btn o" onclick="nav('data')">Batal</button></div>`}
-function riwayat(){return`<div class="card">${hist.length?hist.map(h=>`<div class="row"><div><b>${esc(h.nama)}</b> · ${esc(h.tanaman)}<br><small>${(h.hasil||[]).map(x=>esc(x.nama)+" "+x.cf+"%").join(", ")}</small></div><small>${new Date(h.created_at).toLocaleString("id-ID")}</small></div>`).join(""):"<small>Belum ada diagnosa masuk.</small>"}</div>`}
+function riwayat(){return`<div class="card">${hist.length?hist.map((h,i)=>`<div style="padding:12px 0;border-bottom:1px solid var(--l)"><b>${esc(h.nama)}</b> · ${esc(h.tanaman)} <small>${new Date(h.created_at).toLocaleString("id-ID")}</small><br><small>${(h.hasil||[]).map(x=>esc(x.nama)+" "+x.cf+"%").join(", ")}</small>
+<textarea id="b${i}" placeholder="Tulis saran penanganan untuk petani...">${esc(h.balasan||"")}</textarea>
+<button class="btn" onclick="balas(${i})">${h.balasan?"Perbarui balasan":"Kirim balasan"}</button> <button class="btn o" onclick="isiStandar(${i})">Isi dari saran standar</button>${h.dibalas_at?` <small>Dibalas ${new Date(h.dibalas_at).toLocaleString("id-ID")}</small>`:""}</div>`).join(""):"<small>Belum ada diagnosa masuk.</small>"}</div>`}
+async function balas(i){const h=hist[i],t=$("#b"+i).value.trim();if(!t){alert("Balasan masih kosong.");return}
+ const at=new Date().toISOString();
+ try{const r=await fetch(SB.url+"/rest/v1/riwayat?id=eq."+h.id,{method:"PATCH",headers:{...H(tok),Prefer:"return=minimal"},body:JSON.stringify({balasan:t,dibalas_at:at})});
+  if(!r.ok)throw Error("kode "+r.status+". Sudah menjalankan SQL tambahan di Supabase?");
+  h.balasan=t;h.dibalas_at=at;msg="";render();alert("Balasan terkirim ke petani.")}catch(e){msg="Gagal mengirim balasan: "+e.message;render()}}
+function isiStandar(i){const n=((hist[i].hasil||[])[0]||{}).nama,d=items.find(x=>x.n===n);if(!d){alert("Tidak ada saran standar untuk hasil ini.");return}$("#b"+i).value=d.c.join("\n")}
 function render(){
  if(SB.url.includes("XXXX")){$("#app").innerHTML=`<main><div class="card">Isi dulu <b>js/config.js</b> dengan URL dan anon key Supabase.</div></main>`;return}
  if(!tok){$("#app").innerHTML=`<main style="max-width:360px"><div class="card"><h2>Login Pakar</h2><label>Email</label><input id="em" type="email"><label>Password</label><input id="pw" type="password" onkeydown="event.key=='Enter'&&masuk()"><button class="btn" onclick="masuk()">Masuk</button><p id="msg">${esc(msg)}</p></div></main>`;return}
