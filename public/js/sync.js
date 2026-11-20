@@ -15,8 +15,8 @@ return`<h2>Cek gejala</h2>${chips(ccrop,CR,"setCC")}<div class="card">${S.map(x=
 <button class="btn sec" onclick="cc={};render()">Hapus pilihan</button><div style="height:14px"></div>${res}`}
 async function kirim(){
  const nama=prompt("Nama Anda (boleh dikosongkan):")||"Petani";
- try{const r=await fetch(SB.url+"/rest/v1/riwayat",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json"},body:JSON.stringify({nama,tanaman:ccrop,hasil:lastR})});
-  alert(r.ok?"Terkirim ke pakar. Terima kasih.":"Gagal mengirim.")}catch(e){alert("Tidak ada internet. Coba lagi nanti.")}}
+ try{const r=await fetch(SB.url+"/rest/v1/riwayat",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json"},body:JSON.stringify({nama,tanaman:ccrop,hasil:lastR,kode:kodeku()})});
+  alert(r.ok?"Terkirim ke pakar. Lihat saran pakar nanti di menu Balasan.":"Gagal mengirim.")}catch(e){alert("Tidak ada internet. Coba lagi nanti.")}}
 (async()=>{
  const apply=a=>{if(Array.isArray(a)&&a.length){D.length=0;D.push(...a);render()}};
  try{apply(JSON.parse(localStorage.kb))}catch(e){}
@@ -24,3 +24,25 @@ async function kirim(){
  try{const r=await fetch(SB.url+"/rest/v1/kb?id=eq.1&select=data",{headers:{apikey:SB.key}});
   const j=await r.json();if(j[0]){localStorage.kb=JSON.stringify(j[0].data);apply(j[0].data)}}catch(e){}
 })();
+
+// ===== Balasan pakar =====
+function kodeku(){let k=localStorage.kodeku;if(!k){k=(crypto.randomUUID?crypto.randomUUID():Date.now()+""+Math.random()).replace(/[^a-z0-9]/gi,"");localStorage.kodeku=k}return k}
+let bal=null,balErr="";
+async function muatBalasan(){
+ bal="loading";balErr="";render();
+ try{const r=await fetch(SB.url+"/rest/v1/rpc/cek_balasan",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json"},body:JSON.stringify({k:kodeku()})});
+  if(!r.ok)throw 0;bal=await r.json();localStorage.balasan=JSON.stringify(bal)}
+ catch(e){try{bal=JSON.parse(localStorage.balasan||"[]")}catch(x){bal=[]}balErr="Tidak ada internet. Menampilkan data terakhir."}
+ render()}
+function balasan(){
+ let h=`<h2>Balasan pakar</h2>`;
+ if(bal===null||bal==="loading")return h+`<div class="note">Memuat...</div>`;
+ if(balErr)h+=`<div class="note">${esc(balErr)}</div>`;
+ if(!bal.length)return h+`<div class="note">Belum ada hasil yang dikirim dari HP ini. Kirim lewat menu Cek gejala, tombol Kirim hasil ke pakar.</div>`;
+ return h+bal.map(b=>`<div class="card"><b>${esc(b.tanaman)}</b> <small>${new Date(b.created_at).toLocaleDateString("id-ID")}</small>
+ <p>${(b.hasil||[]).map(x=>esc(x.nama)+" "+x.cf+"%").join(", ")}</p>
+ ${b.balasan?`<h3>Saran pakar</h3><p style="white-space:pre-line">${esc(b.balasan)}</p>`:`<div class="note">Belum dibalas pakar. Cek lagi nanti.</div>`}</div>`).join("")}
+TABS.push(["balasan","Balasan"]);
+function render(){
+$("#nav").innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" onclick="tab='${k}';sel=null;render();scrollTo(0,0);${k==="balasan"?"muatBalasan()":""}">${l}</button>`).join("");
+$("#app").innerHTML=({pustaka,foto,cek,kalender,tentang,balasan})[tab]()}
