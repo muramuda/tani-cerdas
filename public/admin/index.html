@@ -98,7 +98,12 @@ function form(){const d=ed===-1?{t:"padi",k:"Hama",s:0,w:[],g:[],m:[],c:[],n:""}
  <textarea id="fg">${esc(d.g.map((g,i)=>`${g} | ${(d.m&&d.m[i]||[.8,.1])[0]} | ${(d.m&&d.m[i]||[.8,.1])[1]}`).join("\n"))}</textarea>
  <label>Saran penanganan, satu per baris</label><textarea id="fc">${esc(d.c.join("\n"))}</textarea>
  <button class="btn" onclick="submitForm()">Simpan</button> <button class="btn o" onclick="nav('data')">Batal</button></div>`}
-function riwayat(){return`<div class="card">${hist.length?hist.map((h,i)=>`<div style="padding:12px 0;border-bottom:1px solid var(--l)"><b>${esc(h.nama)}</b> · ${esc(h.tanaman)} <small>${new Date(h.created_at).toLocaleString("id-ID")} · kode ${esc((h.kode||"-").slice(0,6))}</small><br><small>${(h.hasil||[]).map(x=>esc(x.nama)+" "+x.cf+"%").join(", ")}</small>
+function detailPetani(h){
+ const g=Array.isArray(h.gejala)&&h.gejala.length?`<div style="margin-top:6px"><small><b>Gejala dipilih:</b> ${h.gejala.map(x=>esc(x.g)+" ("+Math.round((x.u||0)*100)+"%)").join("; ")}</small></div>`:"";
+ const a=Array.isArray(h.hasil_ai)&&h.hasil_ai.length?`<div style="margin-top:4px"><small><b>Hasil AI foto:</b> ${h.hasil_ai.map(x=>esc(x.nama)+" "+Math.round((x.keyakinan||0)*100)+"%").join(", ")}</small></div>`:"";
+ const f=h.foto&&/^data:image\//.test(h.foto)?`<div style="margin-top:8px"><a href="${h.foto}" target="_blank" rel="noopener"><img src="${h.foto}" alt="Foto tanaman dari petani" style="max-width:240px;width:100%;border-radius:10px;border:1px solid var(--l)"></a></div>`:"";
+ return g+a+f}
+function riwayat(){return`<div class="card">${hist.length?hist.map((h,i)=>`<div style="padding:12px 0;border-bottom:1px solid var(--l)"><b>${esc(h.nama)}</b> · ${esc(h.tanaman)} <small>${new Date(h.created_at).toLocaleString("id-ID")} · kode ${esc((h.kode||"-").slice(0,6))}</small><br><small>${(h.hasil||[]).map(x=>esc(x.nama)+" "+x.cf+"%").join(", ")}</small>${detailPetani(h)}
 <textarea id="b${i}" placeholder="Tulis saran penanganan untuk petani...">${esc(h.balasan||"")}</textarea>
 <button class="btn" onclick="balas(${i})">${h.balasan?"Perbarui balasan":"Kirim balasan"}</button> <button class="btn o" onclick="isiStandar(${i})">Isi dari saran standar</button>${h.dibalas_at?` <small>Dibalas ${new Date(h.dibalas_at).toLocaleString("id-ID")}</small>`:""}</div>`).join(""):"<small>Belum ada diagnosa masuk.</small>"}</div>`}
 async function balas(i){const h=hist[i],t=$("#b"+i).value.trim();if(!t){alert("Balasan masih kosong.");return}
