@@ -2,27 +2,41 @@
 <title>Admin Tani Cerdas Sumba Timur</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f6f9f7;--c:#fff;--t:#12241a;--m:#58695f;--p:#0f6b3f;--pi:#fff;--l:#dfe8e2;--r:#c0392b;--h:#0b4a2e;--chip:#eaf4ee}
+:root{--bg:#f4f8f5;--c:#fff;--t:#12241a;--m:#58695f;--p:#0f6b3f;--pi:#fff;--l:#dfe8e2;--r:#c0392b;--h:#0b4a2e;--chip:#eaf4ee}
 @media(prefers-color-scheme:dark){:root{--bg:#0d1611;--c:#15221a;--t:#e6f0e9;--m:#9bb1a2;--p:#4bc183;--pi:#05140b;--l:#243629;--h:#0a3a24;--chip:#1c2e23}}
 *{box-sizing:border-box}body{margin:0;font:15px/1.5 "Public Sans",system-ui,sans-serif;background:var(--bg);color:var(--t)}
-header{position:sticky;top:0;z-index:30;background:var(--h);color:#fff;padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:3px solid #16854f}
-header img{border-radius:9px}header b{margin-right:auto;font-weight:800;font-size:16px;margin-left:4px}
-header button{background:transparent;color:#ffffffcc;border:0;padding:8px 13px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
-header button:hover{background:#ffffff1f}header button.on{background:#fff;color:var(--h)}
-main{max-width:920px;margin:0 auto;padding:20px 16px}
-.card{background:var(--c);border:1px solid var(--l);border-radius:14px;padding:16px;margin-bottom:14px}
-.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
-.s{border-radius:12px;padding:14px 16px;color:#fff;font-size:13.5px;font-weight:600}.s b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em}
+.top{position:sticky;top:0;z-index:30;height:56px;background:var(--h);color:#fff;display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:3px solid #16854f}
+.top img{border-radius:9px}.top b{font-weight:800;margin-right:auto}.top span{font-size:13px;opacity:.85}
+.top button{background:#ffffff1f;color:#fff;border:0;padding:7px 13px;border-radius:8px;cursor:pointer;font:inherit;font-weight:600}
+.wrap{display:flex;align-items:flex-start}
+.side{width:224px;flex:none;background:var(--c);border-right:1px solid var(--l);padding:12px 8px;position:sticky;top:59px;height:calc(100vh - 59px)}
+.side button{display:flex;gap:10px;align-items:center;width:100%;padding:11px 12px;margin-bottom:2px;border:0;background:none;color:var(--t);font:inherit;font-weight:600;border-radius:10px;cursor:pointer;text-align:left}
+.side button.on{background:var(--chip);color:var(--p)}
+main{flex:1;min-width:0;padding:20px;max-width:1000px}
+@media(max-width:800px){.wrap{display:block}.side{display:flex;width:auto;height:auto;top:56px;z-index:25;overflow-x:auto;padding:6px;border-right:0;border-bottom:1px solid var(--l)}.side button{width:auto;white-space:nowrap;margin:0}main{padding:14px}}
+h2{margin:0 0 14px;font-size:22px;font-weight:800;letter-spacing:-.01em}h3{margin:0 0 12px;font-size:17px;font-weight:800}
+.car{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:16/7;min-height:170px;background:var(--h);margin-bottom:18px}
+.car img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .8s}.car img.on{opacity:1}
+.cap{position:absolute;left:0;right:0;bottom:0;padding:44px 20px 16px;color:#fff;background:linear-gradient(transparent,rgba(5,30,18,.88))}
+.cap b{display:block;font-size:20px;font-weight:800}.cap small{color:#ffffffd6}
+.dots{position:absolute;right:14px;bottom:14px;display:flex;gap:7px}.dots i{width:9px;height:9px;border-radius:50%;background:#ffffff80;cursor:pointer}.dots i.on{background:#fff}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:18px}
+.sc{border-radius:12px;overflow:hidden;border:1px solid var(--l);background:var(--c)}
+.sc .u{padding:14px 16px;color:#fff;display:flex;justify-content:space-between;align-items:center}.sc .u b{font-size:34px;font-weight:800;line-height:1}.sc .u span{display:block;font-size:13px;font-weight:600;margin-top:4px}
+.sc a{display:flex;justify-content:space-between;padding:9px 16px;font-size:13px;font-weight:700;color:var(--p);cursor:pointer}
+.card{background:var(--c);border:1px solid var(--l);border-radius:14px;padding:18px;margin-bottom:14px}
+.pr{margin:10px 0}.pr small{display:flex;justify-content:space-between}.pr div{height:9px;background:var(--chip);border-radius:5px;margin-top:4px}.pr i{display:block;height:9px;background:var(--p);border-radius:5px}
+.tl{border-left:3px solid var(--l);margin-left:6px;padding-left:18px}.tl>div{position:relative;margin-bottom:14px}.tl>div:before{content:"";position:absolute;left:-26px;top:5px;width:11px;height:11px;border-radius:50%;background:var(--p)}.tl .w:before{background:#d99a1d}.tl .n:before{background:var(--l)}
+.st{font-size:12px;font-weight:700;padding:1px 8px;border-radius:6px;background:var(--chip);color:var(--p);margin-left:8px}
 input,select,textarea{width:100%;padding:10px;border:1px solid var(--l);border-radius:10px;background:var(--bg);color:var(--t);font:inherit;margin:4px 0 12px}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--p);outline-offset:1px}
-textarea{min-height:92px}label{font-size:13px;font-weight:600;color:var(--m)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--p);outline-offset:1px}textarea{min-height:92px}label{font-size:13px;font-weight:600;color:var(--m)}
 .btn{background:var(--p);color:var(--pi);border:0;padding:10px 18px;border-radius:10px;cursor:pointer;font:inherit;font-weight:700}
-.btn.x{background:var(--r);color:#fff}.btn.o{background:transparent;color:var(--p);border:1px solid var(--p)}
-.row{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--l)}
-.bar{height:10px;background:var(--p);border-radius:5px}small{color:var(--m)}h2{margin:8px 0 2px;font-weight:800}
-.login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--h)}
-.login .card{width:100%;max-width:380px;border-top:4px solid #16854f}
-#msg{color:var(--r);min-height:20px}
+.btn.x{background:var(--r);color:#fff}.btn.o{background:transparent;color:var(--p);border:1px solid var(--p)}.btn.w{background:#fff;color:var(--h);border-radius:999px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--l)}small{color:var(--m)}
+.land{min-height:100vh;background:var(--bg)}.ln{background:var(--h);color:#fff;display:flex;align-items:center;gap:10px;padding:12px 20px}.ln b{margin-right:auto;font-size:20px;font-weight:800}
+.hero{background:var(--h);color:#fff;display:flex;gap:30px;align-items:center;justify-content:center;flex-wrap:wrap;padding:30px 24px 24px}.hero>div{max-width:420px}
+.hero h1{font-size:46px;font-weight:800;margin:0 0 8px;letter-spacing:-.02em;line-height:1.1}.hero p{opacity:.9;margin:0 0 20px}.hero img{width:min(100%,380px);border-radius:18px;box-shadow:0 18px 40px rgba(0,0,0,.35)}
+.lg{max-width:380px;margin:-6px auto 40px;border-top:4px solid #16854f}#msg{color:var(--r);min-height:20px}
 </style></head><body>
 <div id="app"></div>
 <script src="../js/data.js"></script>
@@ -56,11 +70,20 @@ async function submitForm(){
  const old=items.slice();ed===-1?items.push(d):items[ed]=d;
  try{await simpan();view="data";msg="Tersimpan. Aplikasi petani akan mengambil data baru saat online."}catch(e){items=old;msg=e.message}render()}
 function nav(v){view=v;ed=null;msg="";render()}
-const cols=["#0b4a2e","#0f6b3f","#16854f","#1f9a5e"];
+const IC={leaf:"M5 21c8 0 14-6 14-16C9 5 5 11 5 21zM5 21l9-9",list:"M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",book:"M4 19V5a2 2 0 012-2h13v14H6a2 2 0 00-2 2zm0 0a2 2 0 002 2h13",chat:"M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z",check:"M5 12l4 4 10-10",clock:"M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z",home:"M3 11l9-8 9 8M5 10v10h14V10"};
+const ic=(n,z=22)=>`<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`;
+const SL=[["../img/tanaman_lahan.jpg","Diagnosa langsung dari lahan","Petani memeriksa tanaman lewat HP, kapan saja dan di mana saja."],["../img/tanaman_sehat.jpg","Kenali penyakit lebih dini","Sistem pakar membantu mengenali hama dan penyakit sebelum meluas."]];
+let sl=0,slT=null;
+function slide(n){sl=(n+SL.length)%SL.length;document.querySelectorAll(".car img").forEach((e,i)=>e.classList.toggle("on",i===sl));document.querySelectorAll(".dots i").forEach((e,i)=>e.classList.toggle("on",i===sl));const c=$(".cap");if(c)c.innerHTML=`<b>${SL[sl][1]}</b><small>${SL[sl][2]}</small>`}
+function autoSlide(){clearInterval(slT);if(view==="dash"&&tok&&!matchMedia("(prefers-reduced-motion:reduce)").matches)slT=setInterval(()=>slide(sl+1),5000)}
+const LOG=[["Selesai","Aplikasi petani","Pustaka, Kalender, dan Cek gejala. Bisa dibuka tanpa internet dan dipasang di layar utama HP."],["Selesai","Metode Certainty Factor","Hasil Cek gejala berupa persentase kepastian dari nilai MB dan MD tiap gejala."],["Selesai","Halaman admin pakar","Pakar mengelola penyakit, gejala, nilai MB/MD, dan saran penanganan."],["Selesai","Balasan pakar","Pakar membalas diagnosa petani, dan petani membacanya di menu Balasan."],["Selesai","Diagnosa foto (AI)","Petani memotret tanaman, AI memberi perkiraan penyebab."],["Berjalan","Pengisian data penyuluhan","Memasukkan data hama dan penyakit dari penyuluhan ke basis pengetahuan."],["Rencana","Impor data dari Excel/CSV","Memasukkan dataset pakar sekaligus."],["Rencana","Cetak laporan diagnosa","Hasil diagnosa dalam bentuk laporan yang bisa dicetak."]];
 function dash(){
- const nG=items.reduce((a,d)=>a+d.g.length,0),mx=Math.max(...items.map(d=>d.g.length),1);
- return`<div class="g">${[["Data Penyakit",items.length],["Data Gejala",nG],["Basis Pengetahuan",nG],["Total Diagnosa",hist.length]].map(([l,v],i)=>`<div class="s" style="background:${cols[i]}">${l}<b>${v}</b></div>`).join("")}</div>
- <div class="card" style="margin-top:12px"><b>Jumlah gejala per penyakit</b>${items.map(d=>`<div style="margin:8px 0"><small>${esc(d.n)} (${d.g.length})</small><div class="bar" style="width:${d.g.length/mx*100}%"></div></div>`).join("")}</div>`}
+ const nG=items.reduce((a,d)=>a+d.g.length,0),uG=new Set(items.flatMap(d=>d.g)).size,wm=items.filter(d=>d.m&&d.m.length).length,dib=hist.filter(h=>h.balasan).length;
+ const C=[["leaf","Data Penyakit",items.length,"data","#0b4a2e"],["list","Data Gejala",uG,"data","#0f6b3f"],["book","Basis Pengetahuan",nG,"data","#16854f"],["chat","Total Diagnosa",hist.length,"riwayat","#1f9a5e"],["check","Sudah Dibalas",dib,"riwayat","#0f6b3f"],["clock","Menunggu Balasan",hist.length-dib,"riwayat","#16854f"]];
+ const pr=(l,a,b)=>`<div class="pr"><small><span>${l}</span><span>${a} dari ${b}</span></small><div><i style="width:${b?Math.round(a/b*100):0}%"></i></div></div>`;
+ return`<div class="car">${SL.map((x,i)=>`<img src="${x[0]}" alt="" class="${i===sl?"on":""}">`).join("")}<div class="cap"><b>${SL[sl][1]}</b><small>${SL[sl][2]}</small></div><div class="dots">${SL.map((x,i)=>`<i class="${i===sl?"on":""}" onclick="slide(${i});autoSlide()"></i>`).join("")}</div></div>
+ <div class="g">${C.map(([i,l,v,go,col])=>`<div class="sc"><div class="u" style="background:${col}"><div><b>${v}</b><span>${l}</span></div>${ic(i,40)}</div><a onclick="nav('${go}')"><span>Selengkapnya</span><span>›</span></a></div>`).join("")}</div>
+ <div class="card"><h3>Perkembangan Sistem <span class="st">Versi 1.0</span></h3>${pr("Penyakit dengan nilai MB/MD dari pakar",wm,items.length)}${pr("Diagnosa petani yang sudah dibalas",dib,hist.length)}<br><div class="tl">${LOG.map(([s,j,i])=>`<div class="${s==="Berjalan"?"w":s==="Rencana"?"n":""}"><b>${j}</b><span class="st">${s}</span><br><small>${i}</small></div>`).join("")}</div></div>`}
 function data(){return`<button class="btn" onclick="edit(-1)">+ Tambah penyakit/hama</button><div class="card" style="margin-top:12px">${items.map((d,i)=>`<div class="row"><div><b>${esc(d.n)}</b><br><small>${esc(d.t)} · ${esc(d.k)} · ${d.g.length} gejala</small></div><div><button class="btn o" onclick="edit(${i})">Ubah</button> <button class="btn x" onclick="hapus(${i})">Hapus</button></div></div>`).join("")}</div>`}
 function form(){const d=ed===-1?{t:"padi",k:"Hama",s:0,w:[],g:[],m:[],c:[],n:""}:items[ed];
  const opt=(a,v)=>a.map(x=>`<option ${x===v?"selected":""}>${x}</option>`).join("");
@@ -84,10 +107,14 @@ async function balas(i){const h=hist[i],t=$("#b"+i).value.trim();if(!t){alert("B
   h.balasan=t;h.dibalas_at=at;msg="";render();alert("Balasan terkirim ke petani.")}catch(e){msg="Gagal mengirim balasan: "+e.message;render()}}
 function isiStandar(i){const n=((hist[i].hasil||[])[0]||{}).nama,d=items.find(x=>x.n===n);if(!d){alert("Tidak ada saran standar untuk hasil ini.");return}$("#b"+i).value=d.c.join("\n")}
 function render(){
- if(SB.url.includes("XXXX")){$("#app").innerHTML=`<main><div class="card">Isi dulu <b>js/config.js</b> dengan URL dan anon key Supabase.</div></main>`;return}
- if(!tok){$("#app").innerHTML=`<div class="login"><div class="card"><img src="../icon.svg" width="52" height="52" alt="" style="border-radius:12px"><h2>Login Pakar</h2><small>Tani Cerdas Sumba Timur</small><br><br><label>Email</label><input id="em" type="email"><label>Password</label><input id="pw" type="password" onkeydown="event.key=='Enter'&&masuk()"><button class="btn" onclick="masuk()">Masuk</button><p id="msg">${esc(msg)}</p></div></div>`;return}
- const T=[["dash","Dashboard"],["data","Basis Pengetahuan"],["riwayat","Riwayat Diagnosa"]];
- $("#app").innerHTML=`<header><img src="../icon.svg" width="34" height="34" alt=""><b>Admin Tani Cerdas</b>${T.map(([k,l])=>`<button class="${view===k||(view==="form"&&k==="data")?"on":""}" onclick="nav('${k}')">${l}</button>`).join("")}<button onclick="keluar()">Keluar</button></header>
- <main>${msg?`<div class="card" id="msg">${esc(msg)}</div>`:""}${({dash,data,form,riwayat})[view]()}</main>`}
+ if(SB.url.includes("XXXX")){$("#app").innerHTML=`<main><div class="card">Isi dulu <b>js/config.js</b> dengan URL dan kunci Supabase.</div></main>`;return}
+ if(!tok){clearInterval(slT);$("#app").innerHTML=`<div class="land"><div class="ln"><img src="../icon.svg" width="34" height="34" alt="" style="border-radius:9px"><b>Tani Cerdas</b><button class="btn w" onclick="$('#em').focus()">LOGIN ADMIN</button></div>
+<section class="hero"><div><h1>Sistem Pakar</h1><p>Diagnosa hama dan penyakit padi, jagung, dan sayur dengan metode Certainty Factor.</p><button class="btn w" onclick="$('#em').focus()">MASUK SEKARANG</button></div><img src="../img/tanaman_sehat.jpg" alt=""></section>
+<svg viewBox="0 0 1440 80" preserveAspectRatio="none" style="display:block;width:100%;height:60px;background:var(--h)"><path d="M0 40C240 80 480 0 720 30S1200 80 1440 30V80H0Z" fill="var(--bg)"/></svg>
+<div class="card lg"><h2>Login Pakar</h2><label>Email</label><input id="em" type="email"><label>Password</label><input id="pw" type="password" onkeydown="event.key=='Enter'&&masuk()"><button class="btn" onclick="masuk()">Masuk</button><p id="msg">${esc(msg)}</p></div></div>`;return}
+ const T=[["dash","home","Beranda"],["data","book","Basis Pengetahuan"],["riwayat","chat","Riwayat Diagnosa"]],H={dash:"Beranda",data:"Basis Pengetahuan",form:"Basis Pengetahuan",riwayat:"Riwayat Diagnosa"};
+ $("#app").innerHTML=`<div class="top"><img src="../icon.svg" width="34" height="34" alt=""><b>Admin Tani Cerdas</b><span>Administrator</span><button onclick="keluar()">Keluar</button></div>
+ <div class="wrap"><aside class="side">${T.map(([k,i,l])=>`<button class="${view===k||(view==="form"&&k==="data")?"on":""}" onclick="nav('${k}')">${ic(i,18)}${l}</button>`).join("")}</aside>
+ <main><h2>${H[view]}</h2>${msg?`<div class="card" id="msg">${esc(msg)}</div>`:""}${({dash,data,form,riwayat})[view]()}</main></div>`;autoSlide()}
 if(tok)load().then(render);else render();
 </script></body></html>
