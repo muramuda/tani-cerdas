@@ -401,9 +401,32 @@ if(tok)load().then(render);else render();
   window.cetakDiagnosa = function (i) { const h = hist[i]; if (h) cetak("Laporan diagnosa " + (h.nama || ""), satu(h)); };
   window.cetakRekap = function () { cetak("Rekap riwayat diagnosa", rekap()); };
 
+  /* ---------- 4. Lengkapi MB/MD yang kosong (bawaan 0,8 dan 0,1) ---------- */
+  let sedangSimpan = false;
+  function lengkapiMBMD() {
+    let berubah = false;
+    items.forEach(function (d) {
+      if (!Array.isArray(d.m)) { d.m = []; berubah = true; }
+      for (let i = 0; i < d.g.length; i++) {
+        const v = d.m[i];
+        if (!Array.isArray(v) || v.length < 2 || typeof v[0] !== "number" || typeof v[1] !== "number") {
+          d.m[i] = [0.8, 0.1]; berubah = true;
+        }
+      }
+      if (d.m.length > d.g.length) { d.m.length = d.g.length; berubah = true; }
+    });
+    if (berubah && !sedangSimpan) {
+      sedangSimpan = true;
+      simpan().then(function () { sedangSimpan = false; }, function () { sedangSimpan = false; });
+    }
+  }
+
   /* ---------- Pasang ke halaman yang sudah ada ---------- */
+  const _dash = dash;
+  dash = function () { lengkapiMBMD(); return _dash(); };
+
   const _data = data;
-  data = function () { return panel() + _data(); };
+  data = function () { lengkapiMBMD(); return panel() + _data(); };
 
   const _riwayat = riwayat;
   riwayat = function () {
