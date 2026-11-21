@@ -28,7 +28,7 @@ hasil=function(){
 function cek(){
 const S=symp(),on=S.filter(x=>cc[x]);let res="";
 if(on.length){
- const r=D.filter(d=>d.t===ccrop).map(d=>{let cf=0,m=0;
+ const r=D.filter(d=>cocok(d,ccrop)).map(d=>{let cf=0,m=0;
   d.g.forEach((g,i)=>{const u=cc[g];if(!u)return;m++;const [mb,md]=(d.m&&d.m[i])||[.8,.1];const c=Math.max(0,mb-md)*u;cf=cf+c*(1-cf)});
   return{d,m,cf}}).filter(x=>x.m).sort((a,b)=>b.cf-a.cf).slice(0,3);
  lastR=r.map(x=>({nama:x.d.n,cf:Math.round(x.cf*100)}));
@@ -36,14 +36,14 @@ if(on.length){
  <button class="btn" onclick="kirim()">Kirim ke pakar${fotoAI?" (dengan foto)":""}</button><div style="height:10px"></div>
  <div class="note">Hasil dihitung dengan metode Certainty Factor dari gejala yang Anda pilih. Bila ragu atau serangan berat, tunjukkan tanaman ke POPT atau penyuluh.</div>`}
 const fb=fotoAI?`<div class="card"><b>Foto terlampir</b><p style="margin:4px 0 8px">Foto ini akan dikirim ke pakar bersama gejala di bawah.</p><img class="pv" src="${fotoAI.foto}" alt="Foto yang dikirim"><button class="btn sec" style="margin-top:8px" onclick="fotoAI=null;render()">Lepas foto</button></div>`:"";
-return`<h2>Cek gejala</h2>${fb}${chips(ccrop,CR,"setCC")}<div class="card">${S.map(x=>`<div style="margin:0 0 12px"><span>${x}</span><br><select data-k="${esc(x)}" onchange="cc[this.dataset.k]=+this.value;render()" style="margin-top:4px;padding:8px;width:100%">${LV.map(([v,l])=>`<option value="${v}" ${(cc[x]||0)===v?"selected":""}>${l}</option>`).join("")}</select></div>`).join("")}</div>
+return`<h2>Cek gejala</h2>${fb}${chips(ccrop,CR,"setCC")}${ccrop==="sayur"?jenChips():""}<div class="card">${S.map(x=>`<div style="margin:0 0 12px"><span>${x}</span><br><select data-k="${esc(x)}" onchange="cc[this.dataset.k]=+this.value;render()" style="margin-top:4px;padding:8px;width:100%">${LV.map(([v,l])=>`<option value="${v}" ${(cc[x]||0)===v?"selected":""}>${l}</option>`).join("")}</select></div>`).join("")}</div>
 <button class="btn sec" onclick="cc={};render()">Hapus pilihan</button><div style="height:14px"></div>${res}`}
 
 async function kirim(){
  if(sedangKirim)return;
  const n=prompt("Nama Anda (boleh dikosongkan):");if(n===null)return;
  sedangKirim=true;
- const body={nama:n.trim()||"Petani",tanaman:ccrop,hasil:lastR,kode:kodeku(),
+ const body={nama:n.trim()||"Petani",tanaman:ccrop+(ccrop==="sayur"&&jen!=="semua"?" ("+jen+")":""),hasil:lastR,kode:kodeku(),
   gejala:symp().filter(x=>cc[x]).map(x=>({g:x,u:cc[x]}))};
  if(fotoAI){body.foto=fotoAI.foto;body.hasil_ai=fotoAI.ai}
  try{const r=await fetch(SB.url+"/rest/v1/riwayat",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(body)});
