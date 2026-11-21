@@ -1,8 +1,14 @@
-let tab="pustaka",crop="semua",sel=null,mon=NOW,ccrop="padi",cc={},photo=null;
+let tab="pustaka",crop="semua",sel=null,mon=NOW,ccrop="padi",cc={},photo=null,jen="semua";
 const $=s=>document.querySelector(s);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function chips(cur,opts,fn){return`<div class="row">${opts.map(([v,l])=>`<button class="chip" aria-pressed="${cur===v}" onclick="${fn}('${v}')">${l}</button>`).join("")}</div>`}
 const CR=[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"]];
+// Jenis sayuran (cabai, tomat, dst). Penyakit tanpa jenis berlaku untuk semua sayuran.
+const cap=t=>String(t).charAt(0).toUpperCase()+String(t).slice(1);
+const cocok=(d,c)=>d.t===c&&(c!=="sayur"||jen==="semua"||!d.j||!d.j.length||d.j.includes(jen));
+function jenisList(){return[...new Set(D.filter(d=>d.t==="sayur").flatMap(d=>d.j||[]))].sort()}
+function jenChips(){const L=jenisList();if(!L.length)return"";if(jen!=="semua"&&!L.includes(jen))jen="semua";return`<p style="margin:10px 0 4px"><b>Jenis sayuran</b></p>`+chips(jen,[["semua","Semua"],...L.map(x=>[x,cap(x)])],"setJen")}
+function setJen(v){jen=v;cc={};render()}
 const tag=d=>`<span class="tag">${d.k}</span><span class="tag ${d.s?"sb":""}">${d.s?"Tercatat di Sumba Timur":"Data umum"}</span>`;
 function detail(d){return`<button class="chip" onclick="sel=null;render()">Kembali</button>
 <div class="card" style="margin-top:12px"><h2>${d.n}</h2>${tag(d)}<span class="tag">${TAN[d.t]}</span>
@@ -12,8 +18,8 @@ function detail(d){return`<button class="chip" onclick="sel=null;render()">Kemba
 <div class="note">Dosis dan jenis pestisida tidak dicantumkan di sini. Tanyakan ke POPT, penyuluh, atau BPTPH sebelum menyemprot.</div></div>`}
 function pustaka(){
 if(sel!==null)return detail(D[sel]);
-const L=D.map((d,i)=>[d,i]).filter(([d])=>crop==="semua"||d.t===crop);
-return`<h2>Pustaka hama dan penyakit</h2>${chips(crop,[["semua","Semua"],...CR],"setCrop")}
+const L=D.map((d,i)=>[d,i]).filter(([d])=>crop==="semua"||cocok(d,crop));
+return`<h2>Pustaka hama dan penyakit</h2>${chips(crop,[["semua","Semua"],...CR],"setCrop")}${crop==="sayur"?jenChips():""}
 ${L.map(([d,i])=>`<button class="item" onclick="sel=${i};render();scrollTo(0,0)"><b>${d.n}</b><small>${TAN[d.t]}, ${d.k}${d.s?", tercatat di Sumba Timur":""}</small></button>`).join("")}`}
 function kalender(){
 const L=D.filter(d=>d.w.includes(mon+1));
@@ -21,11 +27,11 @@ return`<h2>Kalender waspada</h2><p>Pilih bulan untuk melihat yang perlu diwaspad
 <div class="mon">${MON.map((m,i)=>`<button class="${i===NOW?"now":""}" aria-pressed="${i===mon}" onclick="mon=${i};render()">${m}</button>`).join("")}</div>
 ${["padi","jagung","sayur"].map(c=>{const x=L.filter(d=>d.t===c);return`<div class="card"><b>${TAN[c]}</b>${x.length?x.map(d=>`<div style="margin-top:8px"><button class="item" style="margin:0" onclick="sel=${D.indexOf(d)};tab='pustaka';render();scrollTo(0,0)"><b>${d.n}</b><small>${d.k}</small></button></div>`).join(""):`<p style="color:var(--mut);margin:6px 0 0">Tidak ada yang tercatat bulan ini.</p>`}</div>`}).join("")}
 <div class="note">Kalender mengikuti pola musim NTT (hujan sekitar November sampai Maret, kemarau April sampai Oktober). Bila ragu, tanyakan ke POPT atau BPTPH.</div>`}
-function symp(){const s=[];D.filter(d=>d.t===ccrop).forEach(d=>d.g.forEach(g=>s.includes(g)||s.push(g)));return s}
+function symp(){const s=[];D.filter(d=>cocok(d,ccrop)).forEach(d=>d.g.forEach(g=>s.includes(g)||s.push(g)));return s}
 function cek(){
 const S=symp(),on=S.filter(x=>cc[x]);
 let res="";
-if(on.length){const r=D.filter(d=>d.t===ccrop).map(d=>({d,m:d.g.filter(g=>cc[g]).length,p:d.g.filter(g=>cc[g]).length/d.g.length})).filter(x=>x.m>0).sort((a,b)=>b.p-a.p||b.m-a.m).slice(0,3);
+if(on.length){const r=D.filter(d=>cocok(d,ccrop)).map(d=>({d,m:d.g.filter(g=>cc[g]).length,p:d.g.filter(g=>cc[g]).length/d.g.length})).filter(x=>x.m>0).sort((a,b)=>b.p-a.p||b.m-a.m).slice(0,3);
 res=`<h2>Kemungkinan penyebab</h2>${r.map(x=>`<button class="item" onclick="sel=${D.indexOf(x.d)};tab='pustaka';render();scrollTo(0,0)"><b>${x.d.n}</b><small>${x.m} dari ${x.d.g.length} ciri cocok</small><div class="bar"><i style="width:${Math.round(x.p*100)}%"></i></div></button>`).join("")}
 <div class="note">Ini perkiraan dari ciri yang dipilih, bukan diagnosis pasti. Bila ragu, tunjukkan tanaman ke POPT atau penyuluh.</div>`}
 return`<h2>Cek gejala</h2>${chips(ccrop,CR,"setCC")}<div class="card">${S.map(x=>`<label class="ck"><input type="checkbox" ${cc[x]?"checked":""} onchange="cc[this.dataset.k]=this.checked;render()" data-k="${esc(x)}"><span>${x}</span></label>`).join("")}</div>
@@ -40,7 +46,7 @@ function resize(file,max=1024){return new Promise((ok,no)=>{const im=new Image()
 async function pick(i){const f=i.files[0];i.value="";if(!f)return;pred="loading";perr="";render();
   try{photo=await resize(f);render();
     const r=await fetch("/api/diagnose",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({image:photo.split(",")[1],tanaman:fcrop,kandidat:D.filter(d=>fcrop==="tidak"||d.t===fcrop).map(d=>d.n)})});
+      body:JSON.stringify({image:photo.split(",")[1],tanaman:fcrop,kandidat:D.filter(d=>fcrop==="tidak"||cocok(d,fcrop)).map(d=>d.n)})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(j.error||"Layanan belum bisa dihubungi");
     pred=j;
@@ -62,7 +68,7 @@ function hasil(){
   return h+`<div class="note">Hasil AI hanya perkiraan. Bila ragu atau serangan berat, tunjukkan tanaman ke POPT atau penyuluh.</div>`;
 }
 function foto(){return`<h2>Foto tanaman</h2><div class="card"><p>Pilih tanaman, lalu foto bagian yang sakit atau hama yang terlihat. Perlu internet.</p>
-${chips(fcrop,[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"],["tidak","Tidak tahu"]],"setF")}
+${chips(fcrop,[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"],["tidak","Tidak tahu"]],"setF")}${fcrop==="sayur"?jenChips():""}
 <input type="file" accept="image/*" capture="environment" id="fcam" style="display:none" onchange="pick(this)">
 <input type="file" accept="image/*" id="fgal" style="display:none" onchange="pick(this)">
 <button class="btn" onclick="$('#fcam').click()">Ambil foto dengan kamera</button>
