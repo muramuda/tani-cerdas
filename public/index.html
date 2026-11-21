@@ -9,8 +9,22 @@
 <link rel="icon" href="icon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<style>
+#muat{position:fixed;inset:0;z-index:99999;background:#0b4a2e;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;font-family:"Public Sans",system-ui,sans-serif;transition:opacity .45s ease,visibility .45s}
+#muat.selesai{opacity:0;visibility:hidden}
+#muat img{width:64px;height:64px;border-radius:16px}
+#muat b{font-size:20px;letter-spacing:.2px}
+#muat .rg{width:34px;height:34px;border:4px solid rgba(255,255,255,.25);border-top-color:#fff;border-radius:50%;animation:putarMuat .8s linear infinite}
+#muat small{opacity:.8}
+@keyframes putarMuat{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){#muat .rg{animation-duration:2.4s}#muat{transition:none}}
+</style>
 </head>
 <body>
+<div id="muat" role="status" aria-live="polite"><img src="icon.svg" alt=""><b>Tani Cerdas Sumba Timur</b><div class="rg"></div><small>Memuat aplikasi...</small></div>
+<script>(function(){var t0=Date.now(),sdh=0;function tutup(){if(sdh)return;sdh=1;var m=document.getElementById("muat");if(!m)return;m.classList.add("selesai");setTimeout(function(){m.remove()},600)}
+function siap(){var w=Math.max(0,800-(Date.now()-t0));setTimeout(tutup,w)}
+if(document.readyState==="complete")siap();else addEventListener("load",siap);setTimeout(tutup,4000)})();</script>
 <header><img src="icon.svg" alt=""><div><h1>Tani Cerdas Sumba Timur</h1><p>Kenali hama dan penyakit padi, jagung, dan sayur.</p></div></header>
 <nav role="tablist" id="nav"></nav>
 <main id="app"></main>
