@@ -80,6 +80,7 @@ async function submitForm(){
  const d={t:$("#ft").value,n:$("#fn").value.trim(),k:$("#fk").value,s:$("#fs").checked?1:0,
   w:$("#fw").value.split(",").map(x=>+x.trim()).filter(x=>x>=1&&x<=12),
   g:rows.map(r=>r[0]),m:rows.map(r=>[r[1],r[2]]),c:$("#fc").value.split("\n").map(x=>x.trim()).filter(Boolean)};
+ if(d.t==="sayur"){const j=[...new Set($("#fj").value.split(",").map(x=>x.replace(/['"<>&`\\]/g,"").trim().toLowerCase()).filter(Boolean))];if(j.length)d.j=j}
  if(!d.n||!d.g.length){msg="Nama dan minimal satu gejala wajib diisi.";render();return}
  const old=items.slice();ed===-1?items.push(d):items[ed]=d;
  try{await simpan();view="data";msg="Tersimpan. Aplikasi petani akan mengambil data baru saat online."}catch(e){items=old;msg=e.message}render()}
@@ -98,12 +99,13 @@ function dash(){
  return`<div class="car">${SL.map((x,i)=>`<img src="${x[0]}" alt="" class="${i===sl?"on":""}">`).join("")}<div class="cap"><b>${SL[sl][1]}</b><small>${SL[sl][2]}</small></div><div class="dots">${SL.map((x,i)=>`<i class="${i===sl?"on":""}" onclick="slide(${i});autoSlide()"></i>`).join("")}</div></div>
  <div class="g">${C.map(([i,l,v,go,col])=>`<div class="sc"><div class="u" style="background:${col}"><div><b>${v}</b><span>${l}</span></div>${ic(i,40)}</div><a onclick="nav('${go}')"><span>Selengkapnya</span><span>›</span></a></div>`).join("")}</div>
  <div class="card"><h3>Perkembangan Sistem <span class="st">Versi 1.0</span></h3>${pr("Penyakit dengan nilai MB/MD dari pakar",wm,items.length)}${pr("Diagnosa petani yang sudah dibalas",dib,hist.length)}<br><div class="tl">${LOG.map(([s,j,i])=>`<div class="${s==="Berjalan"?"w":s==="Rencana"?"n":""}"><b>${j}</b><span class="st">${s}</span><br><small>${i}</small></div>`).join("")}</div></div>`}
-function data(){return`<button class="btn" onclick="edit(-1)">+ Tambah penyakit/hama</button><div class="card" style="margin-top:12px">${items.map((d,i)=>`<div class="row"><div><b>${esc(d.n)}</b><br><small>${esc(d.t)} · ${esc(d.k)} · ${d.g.length} gejala</small></div><div><button class="btn o" onclick="edit(${i})">Ubah</button> <button class="btn x" onclick="hapus(${i})">Hapus</button></div></div>`).join("")}</div>`}
+function data(){return`<button class="btn" onclick="edit(-1)">+ Tambah penyakit/hama</button><div class="card" style="margin-top:12px">${items.map((d,i)=>`<div class="row"><div><b>${esc(d.n)}</b><br><small>${esc(d.t)}${d.j&&d.j.length?" ("+esc(d.j.join(", "))+")":""} · ${esc(d.k)} · ${d.g.length} gejala</small></div><div><button class="btn o" onclick="edit(${i})">Ubah</button> <button class="btn x" onclick="hapus(${i})">Hapus</button></div></div>`).join("")}</div>`}
 function form(){const d=ed===-1?{t:"padi",k:"Hama",s:0,w:[],g:[],m:[],c:[],n:""}:items[ed];
  const opt=(a,v)=>a.map(x=>`<option ${x===v?"selected":""}>${x}</option>`).join("");
  return`<div class="card"><b>${ed===-1?"Tambah":"Ubah"} data</b><br>
  <label>Nama</label><input id="fn" value="${esc(d.n)}">
- <label>Tanaman</label><select id="ft">${opt(["padi","jagung","sayur"],d.t)}</select>
+ <label>Tanaman</label><select id="ft" onchange="$('#fjw').style.display=this.value==='sayur'?'block':'none'">${opt(["padi","jagung","sayur"],d.t)}</select>
+  <div id="fjw" style="display:${d.t==='sayur'?'block':'none'}"><label>Jenis sayuran (pisahkan koma, kosongkan = berlaku untuk semua sayuran)</label><input id="fj" placeholder="contoh: cabai, tomat" value="${esc((d.j||[]).join(', '))}"></div>
  <label>Jenis</label><select id="fk">${opt(["Hama","Penyakit"],d.k)}</select>
  <label><input type="checkbox" id="fs" ${d.s?"checked":""} style="width:auto"> Tercatat di Sumba Timur</label><br><br>
  <label>Bulan waspada (angka 1-12, pisahkan koma)</label><input id="fw" value="${d.w.join(", ")}">
@@ -234,9 +236,10 @@ if(tok)load().then(render);else render();
       if (!g) { err.push("Baris " + no + ": gejala kosong."); return; }
       const mb = nilai(cell(r, "mb")), md = nilai(cell(r, "md"));
       if (mb === null || md === null) { err.push("Baris " + no + ": MB dan MD harus angka 0 sampai 1."); return; }
-      const key = n.toLowerCase() + "|" + tt;
+      const jv = (tt === "sayur" && ["sayur", "sayuran"].indexOf(norm(t)) < 0) ? norm(t) : "";
+      const key = n.toLowerCase() + "|" + tt + "|" + jv;
       let d = grp.get(key);
-      if (!d) { d = { t: tt, n: n, k: kk, s: 0, w: [], g: [], m: [], c: [] }; grp.set(key, d); }
+      if (!d) { d = { t: tt, n: n, k: kk, s: 0, w: [], g: [], m: [], c: [] }; if (jv) d.j = [jv]; grp.set(key, d); }
       if (d.g.some(function (x) { return x.toLowerCase() === g.toLowerCase(); })) {
         err.push("Baris " + no + ": gejala sama sudah ada pada " + n + ", dilewati."); return;
       }
