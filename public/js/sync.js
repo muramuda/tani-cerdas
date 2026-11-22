@@ -32,7 +32,7 @@ const _hasil=hasil;
 hasil=function(){
  const h=_hasil();
  if(!photo||pred==="loading")return h;
- if(!konsul)return h+`<div class="note">${MSG_KONSUL}</div>`;
+ if(!konsul)return h;
  return h+`<div style="height:6px"></div><button class="btn" onclick="keCek()">Kirim ke pakar</button>
  <div class="note">Setelah ini Anda diarahkan ke Cek gejala. Isi gejala yang terlihat, lalu kirim. Foto ikut terkirim ke pakar.</div>`};
 
@@ -45,7 +45,7 @@ if(on.length){
   return{d,m,cf}}).filter(x=>x.m).sort((a,b)=>b.cf-a.cf).slice(0,3);
  lastR=r.map(x=>({nama:x.d.n,cf:Math.round(x.cf*100)}));
  res=`<h2>Kemungkinan penyebab</h2>${r.map(x=>`<button class="item" onclick="sel=${D.indexOf(x.d)};tab='pustaka';render();scrollTo(0,0)"><b>${x.d.n}</b><small>Tingkat kepastian ${Math.round(x.cf*100)}% (${x.m} dari ${x.d.g.length} ciri)</small><div class="bar"><i style="width:${Math.round(x.cf*100)}%"></i></div></button>`).join("")}
- ${konsul?profilHTML()+`<button class="btn" onclick="kirim()">Kirim ke pakar${fotoAI?" (dengan foto)":""}</button><div style="height:10px"></div>`:`<div class="note">${MSG_KONSUL}</div>`}
+ ${konsul?profilHTML()+`<button class="btn" onclick="kirim()">Kirim ke pakar${fotoAI?" (dengan foto)":""}</button><div style="height:10px"></div>`:""}
  <div class="note">Hasil dihitung dengan metode Certainty Factor dari gejala yang Anda pilih. Bila ragu atau serangan berat, tunjukkan tanaman ke POPT atau penyuluh.</div>`}
 const fb=fotoAI?`<div class="card"><b>Foto terlampir</b><p style="margin:4px 0 8px">Foto ini akan dikirim ke pakar bersama gejala di bawah.</p><img class="pv" src="${fotoAI.foto}" alt="Foto yang dikirim"><button class="btn sec" style="margin-top:8px" onclick="fotoAI=null;render()">Lepas foto</button></div>`:"";
 return`<h2>Cek gejala</h2>${fb}${chips(ccrop,CR,"setCC")}${ccrop==="sayur"?jenChips():""}<div class="card">${S.map(x=>`<div style="margin:0 0 12px"><span>${x}</span><br><select data-k="${esc(x)}" onchange="cc[this.dataset.k]=+this.value;render()" style="margin-top:4px;padding:8px;width:100%">${LV.map(([v,l])=>`<option value="${v}" ${(cc[x]||0)===v?"selected":""}>${l}</option>`).join("")}</select></div>`).join("")}</div>
