@@ -482,6 +482,58 @@ if(tok)load().then(render);else render();
     const atas = hist.length ? '<div style="margin-bottom:12px"><button class="btn o" onclick="cetakRekap()">Cetak rekap semua</button></div>' : "";
     return atas + h;
   };
+
+  /* ---------- 5. Notifikasi diagnosa baru dari petani (tanpa refresh) ---------- */
+  (function () {
+    const judulAsli = document.title;
+    let adaBaru = 0, sibuk = false;
+    const st = document.createElement("style");
+    st.textContent = ".toastA{position:fixed;right:16px;top:16px;z-index:9999;max-width:340px;background:#0b4a2e;color:#fff;padding:14px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);font-weight:600;cursor:pointer}";
+    document.head.appendChild(st);
+    function toast(teks) {
+      const o = document.createElement("div");
+      o.className = "toastA"; o.setAttribute("role", "status"); o.textContent = teks;
+      o.onclick = function () { o.remove(); view = "riwayat"; ed = null; msg = ""; render(); };
+      document.body.appendChild(o); setTimeout(function () { o.remove(); }, 10000);
+    }
+    function tandaiDilihat() {
+      if (view === "riwayat" && !document.hidden && adaBaru) { adaBaru = 0; document.title = judulAsli; }
+    }
+    async function cekBaru() {
+      if (!tok || document.hidden || sibuk) return;
+      sibuk = true;
+      try {
+        const maxId = hist.reduce(function (m, h) { return Math.max(m, +h.id || 0); }, 0);
+        const r = await fetch(SB.url + "/rest/v1/riwayat?id=gt." + maxId + "&select=*&order=id.desc", { headers: H(tok) });
+        if (!r.ok) return;
+        const baru = await r.json();
+        if (!Array.isArray(baru) || !baru.length) { tandaiDilihat(); return; }
+        // simpan isi kotak balasan yang sedang diketik supaya tidak hilang saat tampilan diperbarui
+        const simpanan = {}; let fokusId = null, selAwal = 0;
+        hist.forEach(function (h, i) {
+          const el = document.getElementById("b" + i);
+          if (el) { simpanan[h.id] = el.value; if (document.activeElement === el) { fokusId = h.id; selAwal = el.selectionStart; } }
+        });
+        hist = baru.concat(hist);
+        adaBaru += baru.length;
+        document.title = "(" + adaBaru + ") " + judulAsli;
+        toast(baru.length + " diagnosa baru dari " + (baru[0].nama || "petani") + ". Klik untuk melihat.");
+        if (view === "riwayat" || view === "dash") {
+          render();
+          hist.forEach(function (h, i) {
+            const el = document.getElementById("b" + i);
+            if (el && simpanan[h.id] !== undefined) {
+              el.value = simpanan[h.id];
+              if (fokusId === h.id) { el.focus(); try { el.setSelectionRange(selAwal, selAwal); } catch (e) {} }
+            }
+          });
+        }
+        tandaiDilihat();
+      } catch (e) { } finally { sibuk = false; }
+    }
+    setInterval(cekBaru, 10000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) { tandaiDilihat(); cekBaru(); } });
+  })();
 })();
 </script>
 </body></html>
