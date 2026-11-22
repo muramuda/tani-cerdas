@@ -528,9 +528,37 @@ if(tok)load().then(render);else render();
     }
   }
 
+  /* ---------- 6. Saklar konsultasi ke pakar (aktif/nonaktif) ---------- */
+  let konsulAktif = true;
+  async function muatKonsul() {
+    try {
+      const r = await fetch(SB.url + "/rest/v1/kb?id=eq.2&select=data", { headers: H(tok) });
+      if (!r.ok) return;
+      const j = await r.json();
+      konsulAktif = !(j[0] && j[0].data && j[0].data.konsultasi === false);
+    } catch (e) { }
+  }
+  window.ubahKonsul = async function () {
+    const baru = !konsulAktif;
+    if (!confirm(baru ? "Aktifkan kembali konsultasi ke pakar? Petani bisa mengirim diagnosa lagi." : "Nonaktifkan konsultasi ke pakar? Petani tidak bisa mengirim diagnosa sampai Anda mengaktifkannya lagi.")) return;
+    try {
+      const r = await fetch(SB.url + "/rest/v1/kb", { method: "POST", headers: Object.assign({}, H(tok), { Prefer: "resolution=merge-duplicates" }), body: JSON.stringify({ id: 2, data: { konsultasi: baru }, updated_at: new Date().toISOString() }) });
+      if (!r.ok) throw Error("kode " + r.status);
+      konsulAktif = baru; msg = baru ? "Konsultasi ke pakar diaktifkan." : "Konsultasi ke pakar dinonaktifkan.";
+    } catch (e) { msg = "Gagal mengubah status konsultasi: " + e.message; }
+    render();
+  };
+  function panelKonsul() {
+    return '<div class="card" style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><b>Konsultasi ke pakar</b><br><small>' +
+      (konsulAktif ? 'AKTIF: petani bisa menekan Kirim ke pakar.' : 'NONAKTIF: petani tidak bisa mengirim diagnosa ke pakar.') +
+      '</small></div><button class="btn ' + (konsulAktif ? 'x' : '') + '" onclick="ubahKonsul()">' + (konsulAktif ? 'Nonaktifkan' : 'Aktifkan') + '</button></div>';
+  }
+  const _load = load;
+  load = async function () { await _load(); await muatKonsul(); };
+
   /* ---------- Pasang ke halaman yang sudah ada ---------- */
   const _dash = dash;
-  dash = function () { lengkapiMBMD(); return _dash(); };
+  dash = function () { lengkapiMBMD(); return panelKonsul() + _dash(); };
 
   const _data = data;
   data = function () { lengkapiMBMD(); return panel() + _data(); };
