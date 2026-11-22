@@ -84,8 +84,8 @@ async function submitForm(){
  if(!d.n||!d.g.length){msg="Nama dan minimal satu gejala wajib diisi.";render();return}
  const old=items.slice();ed===-1?items.push(d):items[ed]=d;
  try{await simpan();view="data";msg="Tersimpan. Aplikasi petani akan mengambil data baru saat online."}catch(e){items=old;msg=e.message}render()}
-function nav(v){view=v;ed=null;msg="";render()}
-const IC={leaf:"M5 21c8 0 14-6 14-16C9 5 5 11 5 21zM5 21l9-9",list:"M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",book:"M4 19V5a2 2 0 012-2h13v14H6a2 2 0 00-2 2zm0 0a2 2 0 002 2h13",chat:"M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z",check:"M5 12l4 4 10-10",clock:"M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z",home:"M3 11l9-8 9 8M5 10v10h14V10"};
+function nav(v){view=v;ed=null;msg="";if(v==="peta")petaData=null;render()}
+const IC={leaf:"M5 21c8 0 14-6 14-16C9 5 5 11 5 21zM5 21l9-9",list:"M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01",book:"M4 19V5a2 2 0 012-2h13v14H6a2 2 0 00-2 2zm0 0a2 2 0 002 2h13",chat:"M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z",check:"M5 12l4 4 10-10",clock:"M12 7v5l3 2M12 21a9 9 0 100-18 9 9 0 000 18z",home:"M3 11l9-8 9 8M5 10v10h14V10",map:"M9 20l-6 2V6l6-2m0 16l6 2m-6-2V4m6 18l6-2V4l-6 2m0 16V6"};
 const ic=(n,z=22)=>`<svg width="${z}" height="${z}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${IC[n]}"/></svg>`;
 const SL=[[IMG_LAHAN,"Diagnosa langsung dari lahan","Petani memeriksa tanaman lewat HP, kapan saja dan di mana saja."],[IMG_SEHAT,"Kenali penyakit lebih dini","Sistem pakar membantu mengenali hama dan penyakit sebelum meluas."]];
 let sl=0,slT=null;
@@ -118,10 +118,11 @@ function bukaFoto(i){const h=hist[i];if(!h||!h.foto)return;
  const im=document.createElement("img");im.src=h.foto;im.style.cssText="max-width:100%;max-height:100%;border-radius:10px";
  o.appendChild(im);o.onclick=()=>o.remove();document.body.appendChild(o)}
 function detailPetani(h){
+ const lk=(h.kelompok||h.lokasi)?`<div style="margin-top:4px"><small><b>Kelompok tani:</b> ${esc(h.kelompok||"-")} · <b>Lokasi:</b> ${esc(h.lokasi||"-")}</small></div>`:"";
  const g=Array.isArray(h.gejala)&&h.gejala.length?`<div style="margin-top:6px"><small><b>Gejala dipilih:</b> ${h.gejala.map(x=>esc(x.g)+" ("+Math.round((x.u||0)*100)+"%)").join("; ")}</small></div>`:"";
  const a=Array.isArray(h.hasil_ai)&&h.hasil_ai.length?`<div style="margin-top:4px"><small><b>Hasil AI foto:</b> ${h.hasil_ai.map(x=>esc(x.nama)+" "+Math.round((x.keyakinan||0)*100)+"%").join(", ")}</small></div>`:"";
  const f=h.foto&&/^data:image\//.test(h.foto)?`<div style="margin-top:8px"><img src="${h.foto}" alt="Foto tanaman dari petani" onclick="bukaFoto(${hist.indexOf(h)})" style="max-width:240px;width:100%;border-radius:10px;border:1px solid var(--l);cursor:zoom-in"><br><small>Klik foto untuk memperbesar</small></div>`:"";
- return g+a+f}
+ return lk+g+a+f}
 function riwayat(){return`<div class="card">${hist.length?hist.map((h,i)=>`<div style="padding:12px 0;border-bottom:1px solid var(--l)"><b>${esc(h.nama)}</b> · ${esc(h.tanaman)} <small>${new Date(h.created_at).toLocaleString("id-ID")} · kode ${esc((h.kode||"-").slice(0,6))}</small><br><small>${(h.hasil||[]).map(x=>esc(x.nama)+" "+x.cf+"%").join(", ")}</small>${detailPetani(h)}
 <textarea id="b${i}" placeholder="Tulis saran penanganan untuk petani...">${esc(h.balasan||"")}</textarea>
 <button class="btn" onclick="balas(${i})">${h.balasan?"Perbarui balasan":"Kirim balasan"}</button> <button class="btn o" onclick="isiStandar(${i})">Isi dari saran standar</button>${h.dibalas_at?` <small>Dibalas ${new Date(h.dibalas_at).toLocaleString("id-ID")}</small>`:""}</div>`).join(""):"<small>Belum ada diagnosa masuk.</small>"}</div>`}
@@ -131,6 +132,65 @@ async function balas(i){const h=hist[i],t=$("#b"+i).value.trim();if(!t){alert("B
   if(!r.ok)throw Error("kode "+r.status+". Sudah menjalankan SQL tambahan di Supabase?");
   h.balasan=t;h.dibalas_at=at;msg="";render();alert("Balasan terkirim ke petani.")}catch(e){msg="Gagal mengirim balasan: "+e.message;render()}}
 function isiStandar(i){const n=((hist[i].hasil||[])[0]||{}).nama,d=items.find(x=>x.n===n);if(!d){alert("Tidak ada saran standar untuk hasil ini.");return}$("#b"+i).value=d.c.join("\n")}
+/* ===== PEMETAAN: sebaran laporan petani per lokasi ===== */
+let petaData=null,petaErr="",petaMuat=false,pf={hari:30,t:"semua"},petaMap=null;
+const TLV=["Rendah","Sedang","Tinggi"],WLV=["#2e9e5b","#e67e22","#c0392b"];
+async function muatPeta(){
+ if(petaMuat)return;petaMuat=true;petaErr="";
+ try{const r=await fetch(SB.url+"/rest/v1/riwayat?select=id,nama,kelompok,lokasi,lat,lon,tanaman,hasil,created_at&order=created_at.desc&limit=5000",{headers:H(tok)});
+  if(!r.ok)throw Error("kode "+r.status+". Sudah menjalankan SQL kolom lokasi di Supabase?");
+  petaData=await r.json();if(!Array.isArray(petaData))petaData=[]}catch(e){petaErr="Gagal memuat data pemetaan: "+e.message;petaData=[]}
+ petaMuat=false;if(view==="peta")render()}
+function setPf(k,v){pf[k]=v;render()}
+function judulLok(t){return String(t).toLowerCase().replace(/(^|[\s\-])\S/g,c=>c.toUpperCase())}
+function hitungPeta(){
+ const batas=pf.hari?Date.now()-pf.hari*864e5:0;
+ const rows=(petaData||[]).filter(r=>(!batas||new Date(r.created_at).getTime()>=batas)&&(pf.t==="semua"||String(r.tanaman||"").toLowerCase().startsWith(pf.t)));
+ const L=new Map(),P=new Map();let tanpa=0;
+ rows.forEach(r=>{const top=(r.hasil||[])[0],pn=(top&&top.nama)||"Tidak teridentifikasi";
+  P.set(pn,(P.get(pn)||0)+1);
+  const lok=String(r.lokasi||"").trim();if(!lok){tanpa++;return}
+  const key=lok.toLowerCase();let o=L.get(key);
+  if(!o){o={nama:judulLok(lok),n:0,P:new Map(),K:new Set(),la:0,lo:0,nc:0};L.set(key,o)}
+  o.n++;o.P.set(pn,(o.P.get(pn)||0)+1);
+  if(r.kelompok&&String(r.kelompok).trim())o.K.add(String(r.kelompok).trim().toLowerCase());
+  if(r.lat!=null&&r.lon!=null&&!isNaN(+r.lat)&&!isNaN(+r.lon)){o.la+=+r.lat;o.lo+=+r.lon;o.nc++}});
+ const arr=[...L.values()].sort((a,b)=>b.n-a.n),max=arr.length?arr[0].n:0;
+ arr.forEach(o=>{const rt=o.n/max;o.lv=o.n<3?0:rt>=.67?2:rt>=.34?1:0;o.top=[...o.P.entries()].sort((a,b)=>b[1]-a[1]).slice(0,3)});
+ return{rows,arr,tanpa,P:[...P.entries()].sort((a,b)=>b[1]-a[1])}}
+function muatLeaflet(){return new Promise((ok,no)=>{if(window.L)return ok();
+ const c=document.createElement("link");c.rel="stylesheet";c.href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";document.head.appendChild(c);
+ const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";s.onload=ok;s.onerror=no;document.head.appendChild(s)})}
+async function tampilPeta(arr){
+ let el=document.getElementById("petaMap");if(!el)return;
+ const pts=arr.filter(o=>o.nc);
+ if(!pts.length){el.innerHTML='<div style="padding:24px;color:var(--m)">Belum ada laporan dengan koordinat lokasi pada filter ini.</div>';return}
+ try{await muatLeaflet()}catch(e){el.innerHTML='<div style="padding:24px;color:var(--m)">Peta tidak bisa dimuat (periksa internet). Tabel di bawah tetap berlaku.</div>';return}
+ el=document.getElementById("petaMap");if(!el||view!=="peta")return;
+ if(petaMap){try{petaMap.remove()}catch(e){}petaMap=null}
+ el.innerHTML="";const m=petaMap=L.map(el);
+ L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"&copy; OpenStreetMap"}).addTo(m);
+ const b=[];
+ pts.forEach(o=>{const la=o.la/o.nc,lo=o.lo/o.nc;b.push([la,lo]);
+  L.circleMarker([la,lo],{radius:9+Math.sqrt(o.n)*3,color:WLV[o.lv],fillColor:WLV[o.lv],fillOpacity:.55,weight:2}).addTo(m)
+   .bindPopup("<b>"+esc(o.nama)+"</b><br>"+o.n+" laporan<br>Rawan: "+TLV[o.lv]+"<br>"+o.top.map(([n,c])=>esc(n)+" ("+c+")").join("<br>"))});
+ b.length>1?m.fitBounds(b,{padding:[40,40],maxZoom:14}):m.setView(b[0],13)}
+function peta(){
+ if(petaData===null){muatPeta();return`<div class="card">Memuat data pemetaan...</div>`}
+ const {rows,arr,tanpa,P}=hitungPeta();
+ const fb=(k,v,l)=>`<button class="btn ${pf[k]===v?"":"o"}" onclick="setPf('${k}',${typeof v==="number"?v:"'"+v+"'"})">${l}</button>`;
+ const maxP=P.length?P[0][1]:1,td='style="padding:8px 6px"';
+ setTimeout(()=>tampilPeta(arr),0);
+ return`${petaErr?`<div class="card" id="msg">${esc(petaErr)}</div>`:""}
+ <div class="card"><b>Periode</b><br><div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px">${fb("hari",7,"7 hari")}${fb("hari",30,"30 hari")}${fb("hari",90,"90 hari")}${fb("hari",0,"Semua")}</div>
+ <b>Tanaman</b><br><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${fb("t","semua","Semua")}${fb("t","padi","Padi")}${fb("t","jagung","Jagung")}${fb("t","sayur","Sayur")}<button class="btn o" onclick="petaData=null;render()">Muat ulang</button></div></div>
+ <div class="card"><div style="display:flex;gap:18px;flex-wrap:wrap"><div><small>Total laporan</small><br><b style="font-size:26px">${rows.length}</b></div><div><small>Lokasi</small><br><b style="font-size:26px">${arr.length}</b></div><div><small>Paling banyak diserang</small><br><b style="font-size:18px">${P.length?esc(P[0][0])+" ("+P[0][1]+")":"-"}</b></div><div><small>Lokasi paling rawan</small><br><b style="font-size:18px">${arr.length?esc(arr[0].nama)+" ("+arr[0].n+")":"-"}</b></div></div></div>
+ <div class="card"><b>Peta sebaran</b><small> · lingkaran makin besar = laporan makin banyak; hijau rendah, oranye sedang, merah tinggi</small><div id="petaMap" style="height:380px;margin-top:10px;border-radius:12px;overflow:hidden;background:var(--chip)"></div></div>
+ <div class="card"><b>Peringkat lokasi</b>${arr.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin-top:8px"><tr style="text-align:left"><th ${td}>#</th><th ${td}>Lokasi</th><th ${td}>Laporan</th><th ${td}>Tingkat rawan</th><th ${td}>Kelompok tani</th><th ${td}>Penyakit/hama terbanyak</th></tr>
+ ${arr.map((o,i)=>`<tr style="border-top:1px solid var(--l)"><td ${td}>${i+1}</td><td ${td}><b>${esc(o.nama)}</b></td><td ${td}>${o.n}</td><td ${td}><span style="background:${WLV[o.lv]};color:#fff;border-radius:999px;padding:2px 10px;font-size:13px">${TLV[o.lv]}</span></td><td ${td}>${o.K.size||"-"}</td><td ${td}>${o.top.map(([n,c])=>esc(n)+" ("+c+")").join(", ")}</td></tr>`).join("")}</table></div>`:`<p><small>Belum ada laporan berlokasi pada filter ini.</small></p>`}
+ ${tanpa?`<p><small>${tanpa} laporan tanpa lokasi tidak ikut dihitung per lokasi.</small></p>`:""}</div>
+ <div class="card"><b>Penyakit/hama paling banyak menyerang</b>${P.length?P.slice(0,10).map(([n,c])=>`<div style="margin-top:10px"><div style="display:flex;justify-content:space-between"><span>${esc(n)}</span><b>${c}</b></div><div style="height:8px;background:var(--chip);border-radius:6px;overflow:hidden"><div style="height:8px;width:${Math.round(c/maxP*100)}%;background:var(--p)"></div></div></div>`).join(""):`<p><small>Belum ada data.</small></p>`}</div>
+ <small>Penyakit/hama dihitung dari hasil teratas tiap diagnosa. Tingkat rawan dibandingkan dengan lokasi yang laporannya paling banyak (minimal 3 laporan untuk naik dari Rendah). Ini indikasi dari laporan petani, bukan data resmi serangan.</small>`}
 function render(){
  if(SB.url.includes("XXXX")){$("#app").innerHTML=`<main><div class="card">Isi dulu <b>js/config.js</b> dengan URL dan kunci Supabase.</div></main>`;return}
  if(!tok&&!layarLogin){clearInterval(slT);$("#app").innerHTML=`<div class="land"><div class="ln"><img src="../icon.svg" width="34" height="34" alt="" style="border-radius:9px"><b>Tani Cerdas</b><button class="btn w" onclick="layarLogin=true;msg='';render();setTimeout(()=>{const e=$('#em');e&&e.focus()},50)">LOGIN ADMIN</button></div>
@@ -139,10 +199,10 @@ function render(){
 </div>`;return}
  if(!tok){clearInterval(slT);$("#app").innerHTML=`<div class="land"><div class="ln"><img src="../icon.svg" width="34" height="34" alt="" style="border-radius:9px"><b>Tani Cerdas</b><button class="btn w" onclick="layarLogin=false;msg='';render()">Kembali</button></div>
 <div class="card lg" style="margin-top:40px"><h2>Login Pakar</h2><label>Email</label><input id="em" type="email" autocomplete="username"><label>Password</label><input id="pw" type="password" autocomplete="current-password" onkeydown="event.key=='Enter'&&masuk()"><button class="btn" onclick="masuk()">Masuk</button><p id="msg">${esc(msg)}</p></div></div>`;return}
- const T=[["dash","home","Beranda"],["data","book","Basis Pengetahuan"],["riwayat","chat","Riwayat Diagnosa"]],H={dash:"Beranda",data:"Basis Pengetahuan",form:"Basis Pengetahuan",riwayat:"Riwayat Diagnosa"};
+ const T=[["dash","home","Beranda"],["data","book","Basis Pengetahuan"],["riwayat","chat","Riwayat Diagnosa"],["peta","map","Pemetaan"]],H={dash:"Beranda",data:"Basis Pengetahuan",form:"Basis Pengetahuan",riwayat:"Riwayat Diagnosa",peta:"Pemetaan"};
  $("#app").innerHTML=`<div class="top"><img src="../icon.svg" width="34" height="34" alt=""><b>Admin Tani Cerdas</b><span>Administrator</span><button onclick="keluar()">Keluar</button></div>
  <div class="wrap"><aside class="side">${T.map(([k,i,l])=>`<button class="${view===k||(view==="form"&&k==="data")?"on":""}" onclick="nav('${k}')">${ic(i,18)}${l}</button>`).join("")}</aside>
- <main><h2>${H[view]}</h2>${msg?`<div class="card" id="msg">${esc(msg)}</div>`:""}${({dash,data,form,riwayat})[view]()}</main></div>`;autoSlide()}
+ <main><h2>${H[view]}</h2>${msg?`<div class="card" id="msg">${esc(msg)}</div>`:""}${({dash,data,form,riwayat,peta})[view]()}</main></div>`;autoSlide()}
 if(tok)load().then(render);else render();
 </script>
 
@@ -384,9 +444,11 @@ if(tok)load().then(render);else render();
 
   function satu(h) {
     const hs = urut(h.hasil), top = hs[0], kb = top && items.find(function (d) { return d.n === top.nama; });
-    const gj = Array.isArray(h.gejala) ? h.gejala.map(function (x) { return typeof x === "string" ? x : (x && (x.teks || x.nama)) || ""; }).filter(Boolean) : [];
+    const gj = Array.isArray(h.gejala) ? h.gejala.map(function (x) { return typeof x === "string" ? x : (x && (x.teks || x.nama || x.g)) || ""; }).filter(Boolean) : [];
     let o = KOP + '<h1>Laporan Hasil Diagnosa</h1><table class="id">' +
       '<tr><td>Nama petani</td><td>' + esc(h.nama) + '</td></tr>' +
+      '<tr><td>Kelompok tani</td><td>' + esc(h.kelompok || "-") + '</td></tr>' +
+      '<tr><td>Lokasi</td><td>' + esc(h.lokasi || "-") + '</td></tr>' +
       '<tr><td>Tanaman</td><td>' + esc(h.tanaman) + '</td></tr>' +
       '<tr><td>Tanggal diagnosa</td><td>' + esc(tgl(h.created_at)) + '</td></tr>' +
       '<tr><td>Kode diagnosa</td><td>' + esc((h.kode || "-").slice(0, 6)) + '</td></tr></table>';
