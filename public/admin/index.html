@@ -539,6 +539,7 @@ if(tok)load().then(render);else render();
     } catch (e) { }
   }
   window.ubahKonsul = async function () {
+    await muatKonsul(); // pakai status terbaru dari server, bukan tebakan layar
     const baru = !konsulAktif;
     if (!confirm(baru ? "Aktifkan kembali konsultasi ke pakar? Petani bisa mengirim diagnosa lagi." : "Nonaktifkan konsultasi ke pakar? Petani tidak bisa mengirim diagnosa sampai Anda mengaktifkannya lagi.")) return;
     try {
@@ -555,6 +556,9 @@ if(tok)load().then(render);else render();
   }
   const _load = load;
   load = async function () { await _load(); await muatKonsul(); };
+  // Saat halaman dibuka/refresh dengan sesi login yang masih aktif, load() asli sudah berjalan lebih dulu,
+  // jadi status konsultasi dibaca dari server di sini supaya tampilan tidak kembali ke AKTIF.
+  if (tok) muatKonsul().then(function () { render(); });
 
   /* ---------- Pasang ke halaman yang sudah ada ---------- */
   const _dash = dash;
