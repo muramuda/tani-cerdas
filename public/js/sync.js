@@ -2,6 +2,16 @@
 // kirim diagnosa (gejala + foto) ke pakar, dan tampilkan balasan pakar.
 const LV=[[0,"Tidak ada"],[.4,"Sedikit yakin"],[.6,"Cukup yakin"],[.8,"Yakin"],[1,"Sangat yakin"]];
 let lastR=[];
+// ===== Status konsultasi ke pakar (diatur admin) =====
+let konsul=true;try{if(localStorage.konsul==="0")konsul=false}catch(e){}
+const MSG_KONSUL="Konsultasi ke pakar sedang dinonaktifkan oleh admin. Hasil di atas tetap bisa dipakai sebagai perkiraan. Untuk serangan berat, hubungi POPT atau penyuluh.";
+async function muatKonsul(){
+ if(SB.url.includes("XXXX"))return;
+ try{const r=await fetch(SB.url+"/rest/v1/kb?id=eq.2&select=data",{headers:{apikey:SB.key}});if(!r.ok)return;
+  const j=await r.json();if(!Array.isArray(j))return;
+  const v=!(j[0]&&j[0].data&&j[0].data.konsultasi===false);
+  try{localStorage.konsul=v?"1":"0"}catch(e){}
+  if(v!==konsul){konsul=v;render()}}catch(e){}}
 
 // ===== Foto dari tab Foto yang ikut dikirim ke pakar =====
 let fotoAI=null,sedangKirim=false;
@@ -11,7 +21,7 @@ function kecil(src,max=720){return new Promise((ok,no)=>{const im=new Image();
   ok(c.toDataURL("image/jpeg",.65))};
  im.onerror=()=>no(new Error("Foto tidak bisa diproses"));im.src=src})}
 async function keCek(){
- if(!photo)return;
+ if(!photo||!konsul)return;
  try{const f=await kecil(photo);
   fotoAI={foto:f,crop:fcrop,ai:(pred&&pred!=="loading"&&Array.isArray(pred.kandidat))?pred.kandidat.map(x=>({nama:x.nama,keyakinan:x.keyakinan,alasan:x.alasan})):[]};
   if(fcrop!=="tidak")ccrop=fcrop;
@@ -22,6 +32,7 @@ const _hasil=hasil;
 hasil=function(){
  const h=_hasil();
  if(!photo||pred==="loading")return h;
+ if(!konsul)return h+`<div class="note">${MSG_KONSUL}</div>`;
  return h+`<div style="height:6px"></div><button class="btn" onclick="keCek()">Kirim ke pakar</button>
  <div class="note">Setelah ini Anda diarahkan ke Cek gejala. Isi gejala yang terlihat, lalu kirim. Foto ikut terkirim ke pakar.</div>`};
 
@@ -34,7 +45,7 @@ if(on.length){
   return{d,m,cf}}).filter(x=>x.m).sort((a,b)=>b.cf-a.cf).slice(0,3);
  lastR=r.map(x=>({nama:x.d.n,cf:Math.round(x.cf*100)}));
  res=`<h2>Kemungkinan penyebab</h2>${r.map(x=>`<button class="item" onclick="sel=${D.indexOf(x.d)};tab='pustaka';render();scrollTo(0,0)"><b>${x.d.n}</b><small>Tingkat kepastian ${Math.round(x.cf*100)}% (${x.m} dari ${x.d.g.length} ciri)</small><div class="bar"><i style="width:${Math.round(x.cf*100)}%"></i></div></button>`).join("")}
- ${profilHTML()}<button class="btn" onclick="kirim()">Kirim ke pakar${fotoAI?" (dengan foto)":""}</button><div style="height:10px"></div>
+ ${konsul?profilHTML()+`<button class="btn" onclick="kirim()">Kirim ke pakar${fotoAI?" (dengan foto)":""}</button><div style="height:10px"></div>`:`<div class="note">${MSG_KONSUL}</div>`}
  <div class="note">Hasil dihitung dengan metode Certainty Factor dari gejala yang Anda pilih. Bila ragu atau serangan berat, tunjukkan tanaman ke POPT atau penyuluh.</div>`}
 const fb=fotoAI?`<div class="card"><b>Foto terlampir</b><p style="margin:4px 0 8px">Foto ini akan dikirim ke pakar bersama gejala di bawah.</p><img class="pv" src="${fotoAI.foto}" alt="Foto yang dikirim"><button class="btn sec" style="margin-top:8px" onclick="fotoAI=null;render()">Lepas foto</button></div>`:"";
 return`<h2>Cek gejala</h2>${fb}${chips(ccrop,CR,"setCC")}${ccrop==="sayur"?jenChips():""}<div class="card">${S.map(x=>`<div style="margin:0 0 12px"><span>${x}</span><br><select data-k="${esc(x)}" onchange="cc[this.dataset.k]=+this.value;render()" style="margin-top:4px;padding:8px;width:100%">${LV.map(([v,l])=>`<option value="${v}" ${(cc[x]||0)===v?"selected":""}>${l}</option>`).join("")}</select></div>`).join("")}</div>
@@ -70,13 +81,14 @@ function deteksiLokasi(){
 async function autoLokasi(){try{if(prof.lok||!navigator.permissions)return;const p=await navigator.permissions.query({name:"geolocation"});if(p.state==="granted")deteksiLokasi()}catch(e){}}
 async function kirim(){
  if(sedangKirim)return;
+ if(!konsul){alert(MSG_KONSUL);return}
  if(!prof.lok.trim()){alert("Isi lokasi (nama desa) dulu, atau tekan Deteksi lokasi saya.");return}
  sedangKirim=true;simpanProf();
  const body={nama:prof.nama.trim()||"Petani",kelompok:prof.kel.trim()||null,lokasi:prof.lok.trim(),lat:prof.lat,lon:prof.lon,tanaman:ccrop+(ccrop==="sayur"&&jen!=="semua"?" ("+jen+")":""),hasil:lastR,kode:kodeku(),
   gejala:symp().filter(x=>cc[x]).map(x=>({g:x,u:cc[x]}))};
  if(fotoAI){body.foto=fotoAI.foto;body.hasil_ai=fotoAI.ai}
  try{const r=await fetch(SB.url+"/rest/v1/riwayat",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json",Prefer:"return=minimal"},body:JSON.stringify(body)});
-  if(!r.ok){alert("Gagal mengirim (kode "+r.status+"). Hubungi admin: SQL tambahan di Supabase mungkin belum dijalankan.");return}
+  if(!r.ok){if(r.status===401||r.status===403){alert("Pengiriman ditolak. Konsultasi ke pakar mungkin sedang dinonaktifkan oleh admin.");muatKonsul()}else alert("Gagal mengirim (kode "+r.status+"). Hubungi admin: SQL tambahan di Supabase mungkin belum dijalankan.");return}
   fotoAI=null;photo=null;pred=null;perr="";cc={};lastR=[];
   alert("Terkirim ke pakar. Saran pakar bisa dilihat nanti di menu Balasan.");
   tab="balasan";sel=null;render();muatBalasan();scrollTo(0,0)}
@@ -129,3 +141,7 @@ async function pantauBalasan(){
  }catch(e){}}
 setInterval(pantauBalasan,20000);setTimeout(pantauBalasan,3000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)pantauBalasan()});
+
+// cek status konsultasi: saat dibuka, tiap 60 detik, dan saat kembali ke aplikasi
+setTimeout(muatKonsul,1500);setInterval(muatKonsul,60000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)muatKonsul()});
