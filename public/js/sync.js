@@ -64,11 +64,11 @@ async function kirim(){
 
 // ===== Balasan pakar =====
 function kodeku(){let k=localStorage.kodeku;if(!k){k=(crypto.randomUUID?crypto.randomUUID():Date.now()+""+Math.random()).replace(/[^a-z0-9]/gi,"");localStorage.kodeku=k}return k}
-let bal=null,balErr="";
+let bal=null,balErr="",balBaru=0;
 async function muatBalasan(){
  bal="loading";balErr="";render();
  try{const r=await fetch(SB.url+"/rest/v1/rpc/cek_balasan",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json"},body:JSON.stringify({k:kodeku()})});
-  if(!r.ok){balErr="Gagal memuat balasan (kode "+r.status+"). Pastikan SQL tambahan sudah dijalankan di Supabase.";throw 0}bal=await r.json();localStorage.balasan=JSON.stringify(bal)}
+  if(!r.ok){balErr="Gagal memuat balasan (kode "+r.status+"). Pastikan SQL tambahan sudah dijalankan di Supabase.";throw 0}bal=await r.json();localStorage.balasan=JSON.stringify(bal);localStorage.balLihat=bal.filter(x=>x.balasan).length;balBaru=0}
  catch(e){try{bal=JSON.parse(localStorage.balasan||"[]")}catch(x){bal=[]}if(!balErr)balErr="Tidak ada internet. Menampilkan data terakhir."}
  render()}
 function balasan(){
@@ -80,6 +80,23 @@ function balasan(){
  <p>${(b.hasil||[]).map(x=>esc(x.nama)+" "+x.cf+"%").join(", ")}</p>
  ${b.balasan?`<h3>Saran pakar</h3><p style="white-space:pre-line">${esc(b.balasan)}</p>`:`<div class="note">Belum dibalas pakar. Cek lagi nanti.</div>`}</div>`).join("")}
 TABS.push(["balasan","Balasan"]);
+function renderNav(){
+$("#nav").innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" onclick="tab='${k}';sel=null;render();scrollTo(0,0);${k==="balasan"?"muatBalasan()":""}">${l}${k==="balasan"&&balBaru?`<span class="bd">${balBaru}</span>`:""}</button>`).join("")}
 function render(){
-$("#nav").innerHTML=TABS.map(([k,l])=>`<button role="tab" aria-selected="${tab===k}" onclick="tab='${k}';sel=null;render();scrollTo(0,0);${k==="balasan"?"muatBalasan()":""}">${l}</button>`).join("");
+renderNav();
 $("#app").innerHTML=({pustaka,foto,cek,kalender,tentang,balasan})[tab]()}
+
+// ===== Notifikasi balasan pakar tanpa refresh =====
+(function(){const st=document.createElement("style");st.textContent=".toast{position:fixed;left:12px;right:12px;top:12px;z-index:9999;background:#0b4a2e;color:#fff;padding:14px 16px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.3);font-weight:600;cursor:pointer}.bd{background:#e67e22;color:#fff;border-radius:999px;padding:1px 7px;font-size:12px;margin-left:6px}";document.head.appendChild(st)})();
+function toast(t,fn){const o=document.createElement("div");o.className="toast";o.setAttribute("role","status");o.textContent=t;o.onclick=()=>{o.remove();fn&&fn()};document.body.appendChild(o);setTimeout(()=>o.remove(),9000)}
+async function pantauBalasan(){
+ if(document.hidden||!localStorage.kodeku||SB.url.includes("XXXX")||bal==="loading")return;
+ try{const r=await fetch(SB.url+"/rest/v1/rpc/cek_balasan",{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json"},body:JSON.stringify({k:kodeku()})});
+  if(!r.ok)return;const arr=await r.json();if(!Array.isArray(arr))return;
+  const n=arr.filter(x=>x.balasan).length;localStorage.balasan=JSON.stringify(arr);
+  if(tab==="balasan"){bal=arr;balErr="";localStorage.balLihat=n;balBaru=0;render();return}
+  const baru=n-(+localStorage.balLihat||0);
+  if(baru>0&&baru!==balBaru){balBaru=baru;renderNav();toast("Pakar sudah membalas diagnosa Anda. Ketuk untuk melihat.",()=>{tab="balasan";sel=null;render();muatBalasan();scrollTo(0,0)})}
+ }catch(e){}}
+setInterval(pantauBalasan,20000);setTimeout(pantauBalasan,3000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)pantauBalasan()});
