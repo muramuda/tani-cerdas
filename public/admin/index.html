@@ -529,30 +529,48 @@ if(tok)load().then(render);else render();
   }
 
   /* ---------- 6. Saklar konsultasi ke pakar (aktif/nonaktif) ---------- */
-  let konsulAktif = true;
+  let kd = { konsultasi: true, tanaman: {} }, konsulAktif = true;
+  const TNM = [["padi", "Padi"], ["jagung", "Jagung"], ["sayur", "Sayur"]];
   async function muatKonsul() {
     try {
       const r = await fetch(SB.url + "/rest/v1/kb?id=eq.2&select=data", { headers: H(tok) });
       if (!r.ok) return;
       const j = await r.json();
-      konsulAktif = !(j[0] && j[0].data && j[0].data.konsultasi === false);
+      const d = (j[0] && j[0].data) || {};
+      kd = { konsultasi: d.konsultasi !== false, tanaman: (d.tanaman && typeof d.tanaman === "object") ? d.tanaman : {} };
+      konsulAktif = kd.konsultasi;
     } catch (e) { }
+  }
+  async function simpanKd(data, pesan) {
+    try {
+      const r = await fetch(SB.url + "/rest/v1/kb", { method: "POST", headers: Object.assign({}, H(tok), { Prefer: "resolution=merge-duplicates" }), body: JSON.stringify({ id: 2, data: data, updated_at: new Date().toISOString() }) });
+      if (!r.ok) throw Error("kode " + r.status);
+      kd = data; konsulAktif = kd.konsultasi; msg = pesan;
+    } catch (e) { msg = "Gagal menyimpan pengaturan: " + e.message; }
+    render();
   }
   window.ubahKonsul = async function () {
     await muatKonsul(); // pakai status terbaru dari server, bukan tebakan layar
     const baru = !konsulAktif;
     if (!confirm(baru ? "Aktifkan kembali konsultasi ke pakar? Petani bisa mengirim diagnosa lagi." : "Nonaktifkan konsultasi ke pakar? Petani tidak bisa mengirim diagnosa sampai Anda mengaktifkannya lagi.")) return;
-    try {
-      const r = await fetch(SB.url + "/rest/v1/kb", { method: "POST", headers: Object.assign({}, H(tok), { Prefer: "resolution=merge-duplicates" }), body: JSON.stringify({ id: 2, data: { konsultasi: baru }, updated_at: new Date().toISOString() }) });
-      if (!r.ok) throw Error("kode " + r.status);
-      konsulAktif = baru; msg = baru ? "Konsultasi ke pakar diaktifkan." : "Konsultasi ke pakar dinonaktifkan.";
-    } catch (e) { msg = "Gagal mengubah status konsultasi: " + e.message; }
-    render();
+    await simpanKd(Object.assign({}, kd, { konsultasi: baru }), baru ? "Konsultasi ke pakar diaktifkan." : "Konsultasi ke pakar dinonaktifkan.");
+  };
+  window.ubahTanaman = async function (t) {
+    await muatKonsul();
+    const nama = (TNM.find(function (x) { return x[0] === t; }) || [t, t])[1];
+    const on = kd.tanaman[t] !== false;
+    if (!confirm(on ? "Nonaktifkan pengecekan " + nama + "? Tombol " + nama + " akan disembunyikan dari menu Foto dan Cek gejala petani." : "Aktifkan kembali pengecekan " + nama + "?")) return;
+    const tn = Object.assign({}, kd.tanaman); tn[t] = !on;
+    await simpanKd(Object.assign({}, kd, { tanaman: tn }), "Pengecekan " + nama + (on ? " dinonaktifkan." : " diaktifkan."));
   };
   function panelKonsul() {
     return '<div class="card" style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><b>Konsultasi ke pakar</b><br><small>' +
       (konsulAktif ? 'AKTIF: petani bisa menekan Kirim ke pakar.' : 'NONAKTIF: petani tidak bisa mengirim diagnosa ke pakar.') +
-      '</small></div><button class="btn ' + (konsulAktif ? 'x' : '') + '" onclick="ubahKonsul()">' + (konsulAktif ? 'Nonaktifkan' : 'Aktifkan') + '</button></div>';
+      '</small></div><button class="btn ' + (konsulAktif ? 'x' : '') + '" onclick="ubahKonsul()">' + (konsulAktif ? 'Nonaktifkan' : 'Aktifkan') + '</button></div>' +
+      '<div class="card"><b>Tanaman yang bisa dicek petani</b><br><small>Tanaman yang dinonaktifkan tombolnya disembunyikan dari menu Foto dan Cek gejala.</small>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">' +
+      TNM.map(function (x) { const on = kd.tanaman[x[0]] !== false; return '<button class="btn ' + (on ? '' : 'o') + '" onclick="ubahTanaman(\'' + x[0] + '\')">' + x[1] + ': ' + (on ? 'aktif' : 'nonaktif') + '</button>'; }).join("") +
+      '</div></div>';
   }
   const _load = load;
   load = async function () { await _load(); await muatKonsul(); };
