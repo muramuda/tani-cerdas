@@ -3,6 +3,9 @@ const $=s=>document.querySelector(s);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function chips(cur,opts,fn){return`<div class="row">${opts.map(([v,l])=>`<button class="chip" aria-pressed="${cur===v}" onclick="${fn}('${v}')">${l}</button>`).join("")}</div>`}
 const CR=[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"]];
+// Tanaman yang dinonaktifkan admin disembunyikan dari Foto dan Cek gejala.
+let tanOn={};try{tanOn=JSON.parse(localStorage.tanon||"{}")||{}}catch(e){}
+const CRaktif=()=>CR.filter(([v])=>tanOn[v]!==false);
 // Jenis sayuran (cabai, tomat, dst). Penyakit tanpa jenis berlaku untuk semua sayuran.
 const cap=t=>String(t).charAt(0).toUpperCase()+String(t).slice(1);
 const cocok=(d,c)=>d.t===c&&(c!=="sayur"||jen==="semua"||!d.j||!d.j.length||d.j.includes(jen));
@@ -46,7 +49,7 @@ function resize(file,max=1024){return new Promise((ok,no)=>{const im=new Image()
 async function pick(i){const f=i.files[0];i.value="";if(!f)return;pred="loading";perr="";render();
   try{photo=await resize(f);render();
     const r=await fetch("/api/diagnose",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({image:photo.split(",")[1],tanaman:fcrop,kandidat:D.filter(d=>fcrop==="tidak"||cocok(d,fcrop)).map(d=>d.n)})});
+      body:JSON.stringify({image:photo.split(",")[1],tanaman:fcrop,kandidat:D.filter(d=>fcrop==="tidak"?tanOn[d.t]!==false:cocok(d,fcrop)).map(d=>d.n)})});
     const j=await r.json().catch(()=>({}));
     if(!r.ok)throw new Error(j.error||"Layanan belum bisa dihubungi");
     pred=j;
@@ -68,7 +71,7 @@ function hasil(){
   return h+`<div class="note">Hasil AI hanya perkiraan. Bila ragu atau serangan berat, tunjukkan tanaman ke POPT atau penyuluh.</div>`;
 }
 function foto(){return`<h2>Foto tanaman</h2><div class="card"><p>Pilih tanaman, lalu foto bagian yang sakit atau hama yang terlihat. Perlu internet.</p>
-${chips(fcrop,[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"],["tidak","Tidak tahu"]],"setF")}${fcrop==="sayur"?jenChips():""}
+${chips(fcrop,[...CRaktif(),["tidak","Tidak tahu"]],"setF")}${fcrop==="sayur"?jenChips():""}
 <input type="file" accept="image/*" capture="environment" id="fcam" style="display:none" onchange="pick(this)">
 <input type="file" accept="image/*" id="fgal" style="display:none" onchange="pick(this)">
 <button class="btn" onclick="$('#fcam').click()">Ambil foto dengan kamera</button>
