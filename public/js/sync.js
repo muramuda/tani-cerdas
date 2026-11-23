@@ -9,11 +9,17 @@ async function muatKonsul(){
  if(SB.url.includes("XXXX"))return;
  try{const r=await fetch(SB.url+"/rest/v1/kb?id=eq.2&select=data",{headers:{apikey:SB.key}});if(!r.ok)return;
   const j=await r.json();if(!Array.isArray(j))return;
-  const v=!(j[0]&&j[0].data&&j[0].data.konsultasi===false);
-  try{localStorage.konsul=v?"1":"0"}catch(e){}
-  if(v!==konsul){konsul=v;render()}}catch(e){}}
+  const d=(j[0]&&j[0].data)||{},v=d.konsultasi!==false,t=(d.tanaman&&typeof d.tanaman==="object")?d.tanaman:{};
+  try{localStorage.konsul=v?"1":"0";localStorage.tanon=JSON.stringify(t)}catch(e){}
+  const ubah=v!==konsul||JSON.stringify(t)!==JSON.stringify(tanOn);
+  konsul=v;tanOn=t;if(ubah)render()}catch(e){}}
 
 // ===== Foto dari tab Foto yang ikut dikirim ke pakar =====
+const _foto=foto;
+foto=function(){const AK=CRaktif();
+ if(!AK.length)return`<h2>Foto tanaman</h2><div class="card"><p>Pengecekan foto tanaman sedang tidak tersedia.</p></div>`;
+ if(fcrop!=="tidak"&&!AK.some(([v])=>v===fcrop))fcrop=AK[0][0];
+ return _foto()};
 let fotoAI=null,sedangKirim=false;
 function kecil(src,max=720){return new Promise((ok,no)=>{const im=new Image();
  im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");
@@ -37,6 +43,9 @@ hasil=function(){
  <div class="note">Setelah ini Anda diarahkan ke Cek gejala. Isi gejala yang terlihat, lalu kirim. Foto ikut terkirim ke pakar.</div>`};
 
 function cek(){
+const AK=CRaktif();
+if(!AK.length)return`<h2>Cek gejala</h2><div class="card"><p>Pengecekan tanaman sedang tidak tersedia.</p></div>`;
+if(!AK.some(([v])=>v===ccrop)){ccrop=AK[0][0];cc={}}
 if(!prof.auto){prof.auto=1;autoLokasi()}
 const S=symp(),on=S.filter(x=>cc[x]);let res="";
 if(on.length){
@@ -48,7 +57,7 @@ if(on.length){
  ${konsul?profilHTML()+`<button class="btn" onclick="kirim()">Kirim ke pakar${fotoAI?" (dengan foto)":""}</button><div style="height:10px"></div>`:""}
  <div class="note">Hasil dihitung dengan metode Certainty Factor dari gejala yang Anda pilih. Bila ragu atau serangan berat, tunjukkan tanaman ke POPT atau penyuluh.</div>`}
 const fb=fotoAI?`<div class="card"><b>Foto terlampir</b><p style="margin:4px 0 8px">Foto ini akan dikirim ke pakar bersama gejala di bawah.</p><img class="pv" src="${fotoAI.foto}" alt="Foto yang dikirim"><button class="btn sec" style="margin-top:8px" onclick="fotoAI=null;render()">Lepas foto</button></div>`:"";
-return`<h2>Cek gejala</h2>${fb}${chips(ccrop,CR,"setCC")}${ccrop==="sayur"?jenChips():""}<div class="card">${S.map(x=>`<div style="margin:0 0 12px"><span>${x}</span><br><select data-k="${esc(x)}" onchange="cc[this.dataset.k]=+this.value;render()" style="margin-top:4px;padding:8px;width:100%">${LV.map(([v,l])=>`<option value="${v}" ${(cc[x]||0)===v?"selected":""}>${l}</option>`).join("")}</select></div>`).join("")}</div>
+return`<h2>Cek gejala</h2>${fb}${chips(ccrop,CRaktif(),"setCC")}${ccrop==="sayur"?jenChips():""}<div class="card">${S.map(x=>`<div style="margin:0 0 12px"><span>${x}</span><br><select data-k="${esc(x)}" onchange="cc[this.dataset.k]=+this.value;render()" style="margin-top:4px;padding:8px;width:100%">${LV.map(([v,l])=>`<option value="${v}" ${(cc[x]||0)===v?"selected":""}>${l}</option>`).join("")}</select></div>`).join("")}</div>
 <button class="btn sec" onclick="cc={};render()">Hapus pilihan</button><div style="height:14px"></div>${res}`}
 
 // ===== Identitas dan lokasi pengirim =====
