@@ -63,3 +63,4 @@ setup.sql                dijalankan sekali di Supabase > SQL Editor
 4. Deploy lewat GitHub + Netlify seperti langkah di atas (bukan seret-lepas, karena fungsi foto butuh `netlify/functions`).
 5. Buka `/admin/`, login, buka Basis Pengetahuan, Ubah lalu Simpan sekali agar data awal tersalin ke database.
 6. Isinya tidak penting, yang penting ada perubahan.
+7. tambah satu karakter
