@@ -24,16 +24,21 @@ function detail(d){return`<button class="chip" onclick="sel=null;render()">Kemba
 <h3>Penanganan</h3><ul>${d.c.map(x=>`<li>${x}</li>`).join("")}</ul>
 <h3>Bulan waspada</h3><p>${d.w.map(m=>MON[m-1]).join(", ")}</p>
 <div class="note">Dosis dan jenis pestisida tidak dicantumkan di sini. Tanyakan ke POPT, penyuluh, atau BPTPH sebelum menyemprot.</div></div>`}
+const aktif=d=>tanOn[d.t]!==false;
 function pustaka(){
+const AK=CRaktif();
+if(sel!==null&&D[sel]&&!aktif(D[sel]))sel=null;
 if(sel!==null)return detail(D[sel]);
-const L=D.map((d,i)=>[d,i]).filter(([d])=>crop==="semua"||cocok(d,crop));
-return`<h2>Pustaka hama dan penyakit</h2>${chips(crop,[["semua","Semua"],...CR],"setCrop")}${crop==="sayur"?jenChips():""}
+if(crop!=="semua"&&!AK.some(([v])=>v===crop))crop="semua";
+if(!AK.length)return`<h2>Pustaka hama dan penyakit</h2><div class="card"><p>Belum ada tanaman yang tersedia.</p></div>`;
+const L=D.map((d,i)=>[d,i]).filter(([d])=>aktif(d)&&(crop==="semua"||cocok(d,crop)));
+return`<h2>Pustaka hama dan penyakit</h2>${chips(crop,[["semua","Semua"],...AK],"setCrop")}${crop==="sayur"?jenChips():""}
 ${L.map(([d,i])=>`<button class="item" onclick="sel=${i};render();scrollTo(0,0)"><b>${d.n}</b><small>${TAN[d.t]}, ${d.k}${d.s?", tercatat di Sumba Timur":""}</small></button>`).join("")}`}
 function kalender(){
-const L=D.filter(d=>d.w.includes(mon+1));
+const L=D.filter(d=>aktif(d)&&d.w.includes(mon+1));
 return`<h2>Kalender waspada</h2><p>Pilih bulan untuk melihat yang perlu diwaspadai. Bulan ini ditandai garis oranye.</p>
 <div class="mon">${MON.map((m,i)=>`<button class="${i===NOW?"now":""}" aria-pressed="${i===mon}" onclick="mon=${i};render()">${m}</button>`).join("")}</div>
-${["padi","sayur"].map(c=>{const x=L.filter(d=>d.t===c);return`<div class="card"><b>${TAN[c]}</b>${x.length?x.map(d=>`<div style="margin-top:8px"><button class="item" style="margin:0" onclick="sel=${D.indexOf(d)};tab='pustaka';render();scrollTo(0,0)"><b>${d.n}</b><small>${d.k}</small></button></div>`).join(""):`<p style="color:var(--mut);margin:6px 0 0">Tidak ada yang tercatat bulan ini.</p>`}</div>`}).join("")}
+${CRaktif().map(x=>x[0]).map(c=>{const x=L.filter(d=>d.t===c);return`<div class="card"><b>${TAN[c]}</b>${x.length?x.map(d=>`<div style="margin-top:8px"><button class="item" style="margin:0" onclick="sel=${D.indexOf(d)};tab='pustaka';render();scrollTo(0,0)"><b>${d.n}</b><small>${d.k}</small></button></div>`).join(""):`<p style="color:var(--mut);margin:6px 0 0">Tidak ada yang tercatat bulan ini.</p>`}</div>`}).join("")}
 <div class="note">Kalender mengikuti pola musim NTT (hujan sekitar November sampai Maret, kemarau April sampai Oktober). Bila ragu, tanyakan ke POPT atau BPTPH.</div>`}
 function symp(){const s=[];D.filter(d=>cocok(d,ccrop)).forEach(d=>d.g.forEach(g=>s.includes(g)||s.push(g)));return s}
 function cek(){
