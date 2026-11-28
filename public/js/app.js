@@ -1,8 +1,13 @@
-let tab="pustaka",crop="semua",sel=null,mon=NOW,ccrop="padi",cc={},photo=null,jen="semua";
+let tab="pustaka",crop="semua",sel=null,mon=NOW,ccrop="jagung",cc={},photo=null,jen="semua";
 const $=s=>document.querySelector(s);
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function chips(cur,opts,fn){return`<div class="row">${opts.map(([v,l])=>`<button class="chip" aria-pressed="${cur===v}" onclick="${fn}('${v}')">${l}</button>`).join("")}</div>`}
-const CR=[["padi","Padi"],["jagung","Jagung"],["sayur","Sayur"]];
+// Aplikasi ini hanya untuk JAGUNG dan CABAI. Cabai disimpan sebagai t="sayur" (jenis "cabai").
+TAN.sayur="Cabai";
+const CR=[["jagung","Jagung"],["sayur","Cabai"]];
+const boleh=d=>!!d&&(d.t==="jagung"||(d.t==="sayur"&&((d.j||[]).includes("cabai")||(!(d.j&&d.j.length)&&/cabai|cabe|lombok/i.test(d.n||"")))));
+const saring=()=>{const x=D.filter(boleh);D.length=0;D.push(...x)};
+saring();
 // Tanaman yang dinonaktifkan admin disembunyikan dari Foto dan Cek gejala.
 let tanOn={};try{tanOn=JSON.parse(localStorage.tanon||"{}")||{}}catch(e){}
 const CRaktif=()=>CR.filter(([v])=>tanOn[v]!==false);
@@ -10,7 +15,7 @@ const CRaktif=()=>CR.filter(([v])=>tanOn[v]!==false);
 const cap=t=>String(t).charAt(0).toUpperCase()+String(t).slice(1);
 const cocok=(d,c)=>d.t===c&&(c!=="sayur"||jen==="semua"||!d.j||!d.j.length||d.j.includes(jen));
 function jenisList(){return[...new Set(D.filter(d=>d.t==="sayur").flatMap(d=>d.j||[]))].sort()}
-function jenChips(){const L=jenisList();if(!L.length)return"";if(jen!=="semua"&&!L.includes(jen))jen="semua";return`<p style="margin:10px 0 4px"><b>Jenis sayuran</b></p>`+chips(jen,[["semua","Semua"],...L.map(x=>[x,cap(x)])],"setJen")}
+function jenChips(){return""}
 function setJen(v){jen=v;cc={};render()}
 const tag=d=>`<span class="tag">${d.k}</span><span class="tag ${d.s?"sb":""}">${d.s?"Tercatat di Sumba Timur":"Data umum"}</span>`;
 function detail(d){return`<button class="chip" onclick="sel=null;render()">Kembali</button>
@@ -28,7 +33,7 @@ function kalender(){
 const L=D.filter(d=>d.w.includes(mon+1));
 return`<h2>Kalender waspada</h2><p>Pilih bulan untuk melihat yang perlu diwaspadai. Bulan ini ditandai garis oranye.</p>
 <div class="mon">${MON.map((m,i)=>`<button class="${i===NOW?"now":""}" aria-pressed="${i===mon}" onclick="mon=${i};render()">${m}</button>`).join("")}</div>
-${["padi","jagung","sayur"].map(c=>{const x=L.filter(d=>d.t===c);return`<div class="card"><b>${TAN[c]}</b>${x.length?x.map(d=>`<div style="margin-top:8px"><button class="item" style="margin:0" onclick="sel=${D.indexOf(d)};tab='pustaka';render();scrollTo(0,0)"><b>${d.n}</b><small>${d.k}</small></button></div>`).join(""):`<p style="color:var(--mut);margin:6px 0 0">Tidak ada yang tercatat bulan ini.</p>`}</div>`}).join("")}
+${["jagung","sayur"].map(c=>{const x=L.filter(d=>d.t===c);return`<div class="card"><b>${TAN[c]}</b>${x.length?x.map(d=>`<div style="margin-top:8px"><button class="item" style="margin:0" onclick="sel=${D.indexOf(d)};tab='pustaka';render();scrollTo(0,0)"><b>${d.n}</b><small>${d.k}</small></button></div>`).join(""):`<p style="color:var(--mut);margin:6px 0 0">Tidak ada yang tercatat bulan ini.</p>`}</div>`}).join("")}
 <div class="note">Kalender mengikuti pola musim NTT (hujan sekitar November sampai Maret, kemarau April sampai Oktober). Bila ragu, tanyakan ke POPT atau BPTPH.</div>`}
 function symp(){const s=[];D.filter(d=>cocok(d,ccrop)).forEach(d=>d.g.forEach(g=>s.includes(g)||s.push(g)));return s}
 function cek(){
@@ -40,7 +45,7 @@ res=`<h2>Kemungkinan penyebab</h2>${r.map(x=>`<button class="item" onclick="sel=
 return`<h2>Cek gejala</h2>${chips(ccrop,CR,"setCC")}<div class="card">${S.map(x=>`<label class="ck"><input type="checkbox" ${cc[x]?"checked":""} onchange="cc[this.dataset.k]=this.checked;render()" data-k="${esc(x)}"><span>${x}</span></label>`).join("")}</div>
 <button class="btn sec" onclick="cc={};render()">Hapus pilihan</button><div style="height:14px"></div>${res}`}
 // ====== DIAGNOSA FOTO ONLINE (lewat /api/diagnose) ======
-let fcrop="padi",pred=null,perr="";
+let fcrop="jagung",pred=null,perr="";
 function resize(file,max=1024){return new Promise((ok,no)=>{const im=new Image(),u=URL.createObjectURL(file);
   im.onload=()=>{const s=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");
     c.width=Math.round(im.width*s);c.height=Math.round(im.height*s);c.getContext("2d").drawImage(im,0,0,c.width,c.height);
@@ -78,7 +83,7 @@ ${chips(fcrop,[...CRaktif(),["tidak","Tidak tahu"]],"setF")}${fcrop==="sayur"?je
 <div style="height:10px"></div>
 <button class="btn sec" onclick="$('#fgal').click()">Unggah foto dari galeri</button>
 ${photo?`<img class="pv" src="${photo}" alt="Foto tanaman yang dipilih">`:""}</div>${hasil()}`}
-function tentang(){return`<h2>Tentang Tani Cerdas</h2><div class="card"><p>Tani Cerdas Sumba Timur membantu petani mengenali hama dan penyakit padi, jagung, dan sayur. Pengetahuannya berasal dari data penyuluhan pertanian dan dikelola oleh pakar lewat halaman admin.</p>
+function tentang(){return`<h2>Tentang Tani Cerdas</h2><div class="card"><p>Tani Cerdas Sumba Timur membantu petani mengenali hama dan penyakit jagung dan cabai. Pengetahuannya berasal dari data penyuluhan pertanian dan dikelola oleh pakar lewat halaman admin.</p>
 <ul><li>Pustaka, Cek gejala, dan Kalender bisa dipakai tanpa internet.</li><li>Foto dan Balasan pakar memerlukan internet.</li><li>Untuk serangan berat atau dosis pestisida, tanyakan ke POPT atau penyuluh.</li></ul></div>`}
 const TABS=[["pustaka","Pustaka"],["foto","Foto"],["cek","Cek gejala"],["kalender","Kalender"],["tentang","Info"]];
 function render(){
