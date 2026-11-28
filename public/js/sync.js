@@ -105,7 +105,7 @@ async function kirim(){
  finally{sedangKirim=false}}
 
 (async()=>{
- const apply=a=>{if(Array.isArray(a)&&a.length){D.length=0;D.push(...a);render()}};
+ const apply=a=>{if(Array.isArray(a)&&a.length){D.length=0;D.push(...a);saring();render()}};
  try{apply(JSON.parse(localStorage.kb))}catch(e){}
  if(SB.url.includes("XXXX"))return;
  try{const r=await fetch(SB.url+"/rest/v1/kb?id=eq.1&select=data",{headers:{apikey:SB.key}});
