@@ -99,13 +99,13 @@ function dash(){
  return`<div class="car">${SL.map((x,i)=>`<img src="${x[0]}" alt="" class="${i===sl?"on":""}">`).join("")}<div class="cap"><b>${SL[sl][1]}</b><small>${SL[sl][2]}</small></div><div class="dots">${SL.map((x,i)=>`<i class="${i===sl?"on":""}" onclick="slide(${i});autoSlide()"></i>`).join("")}</div></div>
  <div class="g">${C.map(([i,l,v,go,col])=>`<div class="sc"><div class="u" style="background:${col}"><div><b>${v}</b><span>${l}</span></div>${ic(i,40)}</div><a onclick="nav('${go}')"><span>Selengkapnya</span><span>›</span></a></div>`).join("")}</div>
  <div class="card"><h3>Perkembangan Sistem <span class="st">Versi 1.0</span></h3>${pr("Penyakit dengan nilai MB/MD dari pakar",wm,items.length)}${pr("Diagnosa petani yang sudah dibalas",dib,hist.length)}<br><div class="tl">${LOG.map(([s,j,i])=>`<div class="${s==="Berjalan"?"w":s==="Rencana"?"n":""}"><b>${j}</b><span class="st">${s}</span><br><small>${i}</small></div>`).join("")}</div></div>`}
-function bolehItem(d){return !!d&&(d.t==="jagung"||(d.t==="sayur"&&((d.j||[]).includes("cabai")||(!(d.j&&d.j.length)&&/cabai|cabe|lombok/i.test(d.n||"")))))}
+function bolehItem(d){return !!d&&(d.t==="padi"||(d.t==="sayur"&&((d.j||[]).includes("cabai")||(!(d.j&&d.j.length)&&/cabai|cabe|lombok/i.test(d.n||"")))))}
 function data(){return`<button class="btn" onclick="edit(-1)">+ Tambah penyakit/hama</button><div class="card" style="margin-top:12px">${items.map((d,i)=>!bolehItem(d)?"":`<div class="row"><div><b>${esc(d.n)}</b><br><small>${esc(d.t)}${d.j&&d.j.length?" ("+esc(d.j.join(", "))+")":""} · ${esc(d.k)} · ${d.g.length} gejala</small></div><div><button class="btn o" onclick="edit(${i})">Ubah</button> <button class="btn x" onclick="hapus(${i})">Hapus</button></div></div>`).join("")}</div>`}
-function form(){const d=ed===-1?{t:"jagung",k:"Hama",s:0,w:[],g:[],m:[],c:[],n:""}:items[ed];
+function form(){const d=ed===-1?{t:"padi",k:"Hama",s:0,w:[],g:[],m:[],c:[],n:""}:items[ed];
  const opt=(a,v)=>a.map(x=>`<option ${x===v?"selected":""}>${x}</option>`).join("");
  return`<div class="card"><b>${ed===-1?"Tambah":"Ubah"} data</b><br>
  <label>Nama</label><input id="fn" value="${esc(d.n)}">
- <label>Tanaman</label><select id="ft"><option value="jagung" ${d.t==="jagung"?"selected":""}>Jagung</option><option value="sayur" ${d.t==="sayur"?"selected":""}>Cabai</option></select>
+ <label>Tanaman</label><select id="ft"><option value="padi" ${d.t==="padi"?"selected":""}>Padi</option><option value="sayur" ${d.t==="sayur"?"selected":""}>Cabai</option></select>
   <label>Jenis</label><select id="fk">${opt(["Hama","Penyakit"],d.k)}</select>
  <label><input type="checkbox" id="fs" ${d.s?"checked":""} style="width:auto"> Tercatat di Sumba Timur</label><br><br>
  <label>Bulan waspada (angka 1-12, pisahkan koma)</label><input id="fw" value="${d.w.join(", ")}">
@@ -145,7 +145,7 @@ function setPf(k,v){pf[k]=v;render()}
 function judulLok(t){return String(t).toLowerCase().replace(/(^|[\s\-])\S/g,c=>c.toUpperCase())}
 function hitungPeta(){
  const batas=pf.hari?Date.now()-pf.hari*864e5:0;
- const rows=(petaData||[]).filter(r=>(!batas||new Date(r.created_at).getTime()>=batas)&&(["jagung","sayur","sayur (cabai)"].includes(String(r.tanaman||"").toLowerCase())&&(pf.t==="semua"||String(r.tanaman||"").toLowerCase().startsWith(pf.t))));
+ const rows=(petaData||[]).filter(r=>(!batas||new Date(r.created_at).getTime()>=batas)&&(["padi","sayur","sayur (cabai)"].includes(String(r.tanaman||"").toLowerCase())&&(pf.t==="semua"||String(r.tanaman||"").toLowerCase().startsWith(pf.t))));
  const L=new Map(),P=new Map();let tanpa=0;
  rows.forEach(r=>{const top=(r.hasil||[])[0],pn=(top&&top.nama)||"Tidak teridentifikasi";
   P.set(pn,(P.get(pn)||0)+1);
@@ -183,7 +183,7 @@ function peta(){
  setTimeout(()=>tampilPeta(arr),0);
  return`${petaErr?`<div class="card" id="msg">${esc(petaErr)}</div>`:""}
  <div class="card"><b>Periode</b><br><div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 12px">${fb("hari",7,"7 hari")}${fb("hari",30,"30 hari")}${fb("hari",90,"90 hari")}${fb("hari",0,"Semua")}</div>
- <b>Tanaman</b><br><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${fb("t","semua","Semua")}${fb("t","jagung","Jagung")}${fb("t","sayur","Cabai")}<button class="btn o" onclick="petaData=null;render()">Muat ulang</button></div></div>
+ <b>Tanaman</b><br><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${fb("t","semua","Semua")}${fb("t","padi","Padi")}${fb("t","sayur","Cabai")}<button class="btn o" onclick="petaData=null;render()">Muat ulang</button></div></div>
  <div class="card"><div style="display:flex;gap:18px;flex-wrap:wrap"><div><small>Total laporan</small><br><b style="font-size:26px">${rows.length}</b></div><div><small>Lokasi</small><br><b style="font-size:26px">${arr.length}</b></div><div><small>Paling banyak diserang</small><br><b style="font-size:18px">${P.length?esc(P[0][0])+" ("+P[0][1]+")":"-"}</b></div><div><small>Lokasi paling rawan</small><br><b style="font-size:18px">${arr.length?esc(arr[0].nama)+" ("+arr[0].n+")":"-"}</b></div></div></div>
  <div class="card"><b>Peta sebaran</b><small> · lingkaran makin besar = laporan makin banyak; hijau rendah, oranye sedang, merah tinggi</small><div id="petaMap" style="height:380px;margin-top:10px;border-radius:12px;overflow:hidden;background:var(--chip)"></div></div>
  <div class="card"><b>Peringkat lokasi</b>${arr.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;margin-top:8px"><tr style="text-align:left"><th ${td}>#</th><th ${td}>Lokasi</th><th ${td}>Laporan</th><th ${td}>Tingkat rawan</th><th ${td}>Kelompok tani</th><th ${td}>Penyakit/hama terbanyak</th></tr>
@@ -194,7 +194,7 @@ function peta(){
 function render(){
  if(SB.url.includes("XXXX")){$("#app").innerHTML=`<main><div class="card">Isi dulu <b>js/config.js</b> dengan URL dan kunci Supabase.</div></main>`;return}
  if(!tok&&!layarLogin){clearInterval(slT);$("#app").innerHTML=`<div class="land"><div class="ln"><img src="../icon.svg" width="34" height="34" alt="" style="border-radius:9px"><b>Tani Cerdas</b><button class="btn w" onclick="layarLogin=true;msg='';render();setTimeout(()=>{const e=$('#em');e&&e.focus()},50)">LOGIN ADMIN</button></div>
-<section class="hero"><div><h1>Sistem Pakar</h1><p>Diagnosa hama dan penyakit jagung dan cabai dengan metode Certainty Factor.</p><button class="btn w" onclick="layarLogin=true;msg='';render();setTimeout(()=>{const e=$('#em');e&&e.focus()},50)">MASUK SEKARANG</button></div><img src="${IMG_SEHAT}" alt=""></section>
+<section class="hero"><div><h1>Sistem Pakar</h1><p>Diagnosa hama dan penyakit padi dan cabai dengan metode Certainty Factor.</p><button class="btn w" onclick="layarLogin=true;msg='';render();setTimeout(()=>{const e=$('#em');e&&e.focus()},50)">MASUK SEKARANG</button></div><img src="${IMG_SEHAT}" alt=""></section>
 <svg viewBox="0 0 1440 80" preserveAspectRatio="none" style="display:block;width:100%;height:60px;background:var(--h)"><path d="M0 40C240 80 480 0 720 30S1200 80 1440 30V80H0Z" fill="var(--bg)"/></svg>
 </div>`;return}
  if(!tok){clearInterval(slT);$("#app").innerHTML=`<div class="land"><div class="ln"><img src="../icon.svg" width="34" height="34" alt="" style="border-radius:9px"><b>Tani Cerdas</b><button class="btn w" onclick="layarLogin=false;msg='';render()">Kembali</button></div>
@@ -530,7 +530,7 @@ if(tok)load().then(render);else render();
 
   /* ---------- 6. Saklar konsultasi ke pakar (aktif/nonaktif) ---------- */
   let kd = { konsultasi: true, tanaman: {} }, konsulAktif = true;
-  const TNM = [["jagung", "Jagung"], ["sayur", "Cabai"]];
+  const TNM = [["padi", "Padi"], ["sayur", "Cabai"]];
   async function muatKonsul() {
     try {
       const r = await fetch(SB.url + "/rest/v1/kb?id=eq.2&select=data", { headers: H(tok) });
